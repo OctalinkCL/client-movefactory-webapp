@@ -11,13 +11,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useCreateUser } from '../composables/useCreateUser'
-import type { Profile } from '@/types/profile'
 
 const props = defineProps<{
-  role: Extract<Profile['role'], 'nutricionista' | 'usuario'>
+  role: 'nutritionist' | 'user'
 }>()
 
-const label = computed(() => (props.role === 'nutricionista' ? 'Staff' : 'Usuario'))
+const label = computed(() => (props.role === 'nutritionist' ? 'Staff' : 'Usuario'))
 
 const open = ref(false)
 const form = reactive({ full_name: '', email: '', password: '' })
@@ -39,21 +38,21 @@ async function submit() {
     <DialogTrigger as-child>
       <Button>Agregar {{ label }}</Button>
     </DialogTrigger>
-    <DialogContent class="sm:max-w-md">
+    <DialogContent class="sm:max-w-md" :aria-describedby="undefined">
       <DialogHeader>
         <DialogTitle>Nuevo {{ label }}</DialogTitle>
       </DialogHeader>
-      <div class="flex flex-col gap-4 py-4">
+      <form @submit.prevent="submit" class="flex flex-col gap-4 py-4">
         <Input v-model="form.full_name" placeholder="Nombre completo" />
         <Input v-model="form.email" type="email" placeholder="Email" />
         <Input v-model="form.password" type="password" placeholder="Contraseña temporal" />
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-      </div>
-      <DialogFooter>
-        <Button @click="submit" :disabled="loading">
-          {{ loading ? 'Creando...' : 'Crear' }}
-        </Button>
-      </DialogFooter>
+        <DialogFooter>
+          <Button type="submit" :disabled="loading">
+            {{ loading ? 'Creando...' : 'Crear' }}
+          </Button>
+        </DialogFooter>
+      </form>
     </DialogContent>
   </Dialog>
 </template>

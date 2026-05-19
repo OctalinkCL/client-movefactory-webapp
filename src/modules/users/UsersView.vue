@@ -5,6 +5,6 @@ import CreateUser from './components/CreateUser.vue'
 <template>
   <div>
     <h1>Usuarios</h1>
-    <CreateUser role="usuario" />
+    <CreateUser role="user" />
   </div>
 </template>

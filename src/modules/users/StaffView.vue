@@ -5,6 +5,6 @@ import CreateUser from './components/CreateUser.vue'
 <template>
   <div>
     <h1>Staff</h1>
-    <CreateUser role="nutricionista" />
+    <CreateUser role="nutritionist" />
   </div>
 </template>
