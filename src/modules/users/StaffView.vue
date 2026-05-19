@@ -1,11 +1,10 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import CreateUser from './components/CreateUser.vue'
+</script>
 
 <template>
   <div>
     <h1>Staff</h1>
-    <!-- UsersStaffList -->
-    <ul>
-      <li>user_data</li>
-    </ul>
+    <CreateUser role="nutricionista" />
   </div>
 </template>

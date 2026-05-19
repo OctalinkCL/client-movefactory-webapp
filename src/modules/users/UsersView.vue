@@ -1,11 +1,10 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import CreateUser from './components/CreateUser.vue'
+</script>
 
 <template>
   <div>
-    <h1>Users</h1>
-    <!-- UsersClientList -->
-    <ul>
-      <li>user_data</li>
-    </ul>
+    <h1>Usuarios</h1>
+    <CreateUser role="usuario" />
   </div>
 </template>

@@ -1,7 +1,59 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { ref, reactive, computed } from 'vue'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useCreateUser } from '../composables/useCreateUser'
+import type { Profile } from '@/types/profile'
+
+const props = defineProps<{
+  role: Extract<Profile['role'], 'nutricionista' | 'usuario'>
+}>()
+
+const label = computed(() => (props.role === 'nutricionista' ? 'Staff' : 'Usuario'))
+
+const open = ref(false)
+const form = reactive({ full_name: '', email: '', password: '' })
+const { createUser, loading, error } = useCreateUser()
+
+async function submit() {
+  try {
+    await createUser({ ...form, role: props.role })
+    open.value = false
+    Object.assign(form, { full_name: '', email: '', password: '' })
+  } catch {
+    // error ref is set by composable
+  }
+}
+</script>
 
 <template>
-  <div>
-    <h1>Create User</h1>
-  </div>
+  <Dialog v-model:open="open">
+    <DialogTrigger as-child>
+      <Button>Agregar {{ label }}</Button>
+    </DialogTrigger>
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>Nuevo {{ label }}</DialogTitle>
+      </DialogHeader>
+      <div class="flex flex-col gap-4 py-4">
+        <Input v-model="form.full_name" placeholder="Nombre completo" />
+        <Input v-model="form.email" type="email" placeholder="Email" />
+        <Input v-model="form.password" type="password" placeholder="Contraseña temporal" />
+        <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
+      </div>
+      <DialogFooter>
+        <Button @click="submit" :disabled="loading">
+          {{ loading ? 'Creando...' : 'Crear' }}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
