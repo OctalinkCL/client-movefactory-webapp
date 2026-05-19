@@ -6,57 +6,61 @@ import { useMealPlan } from './composables/useMealPlan'
 import { useMoments } from './composables/useMoments'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
+} from '@/components/ui/dialog'
 
 const route = useRoute()
 const router = useRouter()
 const userId = route.params.id as string
 
 const { user } = useUser(userId)
-const { plan, loading, error, fetchOrCreatePlan, addMoment, removeMoment, addItem, removeItem, copyMomentToDays } = useMealPlan()
+const { plan, loading, error, fetchOrCreatePlan, removeMoment, removeItem, createMomentForDays } = useMealPlan()
 const { moments } = useMoments()
 
 onMounted(() => fetchOrCreatePlan(userId))
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+const selectedDay = ref(1)
 
 function momentsByDay(day: number) {
   return plan.value?.meal_plan_moments?.filter(m => m.day === day) ?? []
 }
 
-// Add moment form state
-const addingDay = ref<number | null>(null)
-const momentForm = reactive({ momentId: '', note: '' })
+// New moment form
+const dialogOpen = ref(false)
+const form = reactive({
+  momentId: '',
+  note: '',
+  days: [] as number[],
+  items: [] as { foodType: string; portion: string; isFreeChoice: boolean }[],
+})
+const newItem = reactive({ foodType: '', portion: '', isFreeChoice: false })
 
-async function submitMoment(day: number) {
-  if (!momentForm.momentId || !plan.value) return
-  await addMoment(plan.value.id, day, momentForm.momentId, momentForm.note)
-  momentForm.momentId = ''
-  momentForm.note = ''
-  addingDay.value = null
+function addItemToForm() {
+  if (!newItem.foodType) return
+  form.items.push({ ...newItem })
+  newItem.foodType = ''
+  newItem.portion = ''
+  newItem.isFreeChoice = false
 }
 
-// Copy moment to days state
-const copyingMoment = ref<string | null>(null)
-const copyTargetDays = ref<number[]>([])
-
-async function submitCopy(sourceMomentId: string) {
-  if (!copyTargetDays.value.length) return
-  await copyMomentToDays(sourceMomentId, copyTargetDays.value)
-  copyingMoment.value = null
-  copyTargetDays.value = []
+function removeItemFromForm(index: number) {
+  form.items.splice(index, 1)
 }
 
-// Add item form state
-const addingItemFor = ref<string | null>(null)
-const itemForm = reactive({ foodType: '', portion: '', isFreeChoice: false })
+function resetForm() {
+  form.momentId = ''
+  form.note = ''
+  form.days = []
+  form.items = []
+  dialogOpen.value = false
+}
 
-async function submitItem(planMomentId: string) {
-  if (!itemForm.foodType) return
-  await addItem(planMomentId, { ...itemForm })
-  itemForm.foodType = ''
-  itemForm.portion = ''
-  itemForm.isFreeChoice = false
-  addingItemFor.value = null
+async function submitForm() {
+  if (!form.momentId || !form.days.length || !plan.value) return
+  await createMomentForDays(plan.value.id, form.days, form.momentId, form.note, form.items)
+  resetForm()
 }
 </script>
 
@@ -66,27 +70,94 @@ async function submitItem(planMomentId: string) {
       ← Volver
     </button>
 
-    <div class="space-y-1">
-      <h1 class="text-2xl font-semibold">Plan de alimentación</h1>
-      <p v-if="user" class="text-muted-foreground text-sm">{{ user.full_name }}</p>
+    <div class="flex items-center justify-between">
+      <div class="space-y-1">
+        <h1 class="text-2xl font-semibold">Plan de alimentación</h1>
+        <p v-if="user" class="text-muted-foreground text-sm">{{ user.full_name }}</p>
+      </div>
+      <Dialog v-model:open="dialogOpen">
+        <DialogTrigger as-child>
+          <Button>+ Nuevo momento</Button>
+        </DialogTrigger>
+        <DialogContent :aria-describedby="undefined" class="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Nuevo momento</DialogTitle>
+          </DialogHeader>
+
+          <div class="space-y-4 py-2">
+            <select v-model="form.momentId" class="w-full border rounded-md px-3 py-2 text-sm bg-background">
+              <option value="" disabled>Seleccionar tipo de momento</option>
+              <option v-for="m in moments" :key="m.id" :value="m.id">{{ m.name }}</option>
+            </select>
+
+            <Input v-model="form.note" placeholder="Nota (opcional)" />
+
+            <!-- Items -->
+            <div class="space-y-2">
+              <p class="text-sm font-medium">Ítems</p>
+              <ul class="space-y-1">
+                <li v-for="(item, i) in form.items" :key="i" class="flex items-center justify-between text-sm">
+                  <span>{{ item.isFreeChoice ? '🟢 Libre elección' : `${item.portion} ${item.foodType}` }}</span>
+                  <button class="text-xs text-destructive hover:underline" @click="removeItemFromForm(i)">×</button>
+                </li>
+              </ul>
+              <div class="flex flex-col gap-2">
+                <Input v-model="newItem.foodType" placeholder="Tipo de alimento (ej: Proteína)" />
+                <Input v-if="!newItem.isFreeChoice" v-model="newItem.portion" placeholder="Porción (ej: 250g)" />
+                <label class="flex items-center gap-2 text-sm">
+                  <input type="checkbox" v-model="newItem.isFreeChoice" />
+                  Libre elección
+                </label>
+                <Button size="sm" variant="outline" @click="addItemToForm">+ Agregar ítem</Button>
+              </div>
+            </div>
+
+            <!-- Day checkboxes -->
+            <div class="space-y-2">
+              <p class="text-sm font-medium">Aplicar en los días</p>
+              <div class="flex flex-wrap gap-3">
+                <label v-for="(dayName, di) in DAYS" :key="di" class="flex items-center gap-1 text-sm">
+                  <input type="checkbox" :value="di + 1" v-model="form.days" />
+                  {{ dayName.slice(0, 3) }}
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" @click="resetForm">Cancelar</Button>
+            <Button @click="submitForm" :disabled="!form.momentId || !form.days.length">Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
 
     <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
     <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
 
+    <!-- Day tabs -->
     <div v-if="plan" class="space-y-4">
-      <section
-        v-for="(dayName, index) in DAYS"
-        :key="index"
-        class="border rounded-md p-4 space-y-3"
-      >
-        <h2 class="font-medium">{{ dayName }}</h2>
+      <div class="flex gap-1 flex-wrap">
+        <button
+          v-for="(dayName, di) in DAYS"
+          :key="di"
+          class="px-3 py-1 rounded-md text-sm border transition-colors"
+          :class="selectedDay === di + 1 ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
+          @click="selectedDay = di + 1"
+        >
+          {{ dayName.slice(0, 3) }}
+        </button>
+      </div>
 
-        <!-- Moments of this day -->
+      <!-- Selected day content -->
+      <div class="space-y-3">
+        <p v-if="momentsByDay(selectedDay).length === 0" class="text-sm text-muted-foreground">
+          Sin momentos para este día.
+        </p>
         <div
-          v-for="m in momentsByDay(index + 1)"
+          v-for="m in momentsByDay(selectedDay)"
           :key="m.id"
-          class="border-l-2 pl-3 space-y-2"
+          class="border rounded-md p-3 space-y-2"
         >
           <div class="flex items-center justify-between">
             <span class="font-medium text-sm">{{ m.moment?.name }}</span>
@@ -95,91 +166,18 @@ async function submitItem(planMomentId: string) {
             </button>
           </div>
           <p v-if="m.note" class="text-xs text-muted-foreground">{{ m.note }}</p>
-
-          <!-- Items -->
           <ul class="space-y-1">
             <li
               v-for="item in m.meal_plan_items"
               :key="item.id"
               class="flex items-center justify-between text-sm"
             >
-              <span>
-                {{ item.is_free_choice ? '🟢 Libre elección' : `${item.portion} ${item.food_type}` }}
-              </span>
-              <button class="text-xs text-destructive hover:underline" @click="removeItem(item.id, m.id)">
-                ×
-              </button>
+              <span>{{ item.is_free_choice ? '🟢 Libre elección' : `${item.portion} ${item.food_type}` }}</span>
+              <button class="text-xs text-destructive hover:underline" @click="removeItem(item.id, m.id)">×</button>
             </li>
           </ul>
-
-          <!-- Copy to days -->
-          <div v-if="copyingMoment === m.id" class="flex flex-col gap-2 pt-1">
-            <p class="text-xs font-medium">Repetir en:</p>
-            <div class="flex flex-wrap gap-2">
-              <label
-                v-for="(dayName, di) in DAYS"
-                :key="di"
-                class="flex items-center gap-1 text-xs"
-                :class="{ 'opacity-30 pointer-events-none': di + 1 === m.day }"
-              >
-                <input type="checkbox" :value="di + 1" v-model="copyTargetDays" :disabled="di + 1 === m.day" />
-                {{ dayName.slice(0, 3) }}
-              </label>
-            </div>
-            <div class="flex gap-2">
-              <Button size="sm" @click="submitCopy(m.id)">Aplicar</Button>
-              <Button size="sm" variant="outline" @click="copyingMoment = null; copyTargetDays = []">Cancelar</Button>
-            </div>
-          </div>
-          <button
-            v-else
-            class="text-xs text-muted-foreground hover:underline"
-            @click="copyingMoment = m.id; copyTargetDays = []"
-          >
-            Repetir en otros días
-          </button>
-
-          <!-- Add item form -->
-          <div v-if="addingItemFor === m.id" class="flex flex-col gap-2 pt-1">
-            <Input v-model="itemForm.foodType" placeholder="Tipo de alimento (ej: Proteína)" />
-            <Input v-if="!itemForm.isFreeChoice" v-model="itemForm.portion" placeholder="Porción (ej: 250g)" />
-            <label class="flex items-center gap-2 text-sm">
-              <input type="checkbox" v-model="itemForm.isFreeChoice" />
-              Libre elección
-            </label>
-            <div class="flex gap-2">
-              <Button size="sm" @click="submitItem(m.id)">Agregar</Button>
-              <Button size="sm" variant="outline" @click="addingItemFor = null">Cancelar</Button>
-            </div>
-          </div>
-          <button
-            v-else
-            class="text-xs text-muted-foreground hover:underline"
-            @click="addingItemFor = m.id"
-          >
-            + Agregar ítem
-          </button>
         </div>
-
-        <!-- Add moment form -->
-        <div v-if="addingDay === index + 1" class="flex flex-col gap-2">
-          <select
-            v-model="momentForm.momentId"
-            class="border rounded-md px-3 py-2 text-sm bg-background"
-          >
-            <option value="" disabled>Seleccionar momento</option>
-            <option v-for="m in moments" :key="m.id" :value="m.id">{{ m.name }}</option>
-          </select>
-          <Input v-model="momentForm.note" placeholder="Nota (opcional)" />
-          <div class="flex gap-2">
-            <Button size="sm" @click="submitMoment(index + 1)">Agregar</Button>
-            <Button size="sm" variant="outline" @click="addingDay = null">Cancelar</Button>
-          </div>
-        </div>
-        <Button v-else size="sm" variant="outline" @click="addingDay = index + 1">
-          + Momento
-        </Button>
-      </section>
+      </div>
     </div>
   </div>
 </template>

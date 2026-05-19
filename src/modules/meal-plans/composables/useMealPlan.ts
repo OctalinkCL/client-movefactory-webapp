@@ -93,6 +93,42 @@ export function useMealPlan() {
       moment.meal_plan_items = moment.meal_plan_items.filter(i => i.id !== itemId)
   }
 
+  async function createMomentForDays(
+    planId: string,
+    days: number[],
+    momentId: string,
+    note: string | undefined,
+    items: { foodType: string; portion: string; isFreeChoice: boolean }[]
+  ) {
+    for (const day of days) {
+      const { data: newMoment, error: err } = await supabase
+        .from('meal_plan_moments')
+        .insert({ meal_plan_id: planId, day, moment_id: momentId, note: note || null })
+        .select('*, moment:moments(*)')
+        .single()
+
+      if (err) { error.value = err.message; continue }
+
+      newMoment.meal_plan_items = []
+
+      if (items.length) {
+        const { data: newItems } = await supabase
+          .from('meal_plan_items')
+          .insert(items.map(item => ({
+            meal_plan_moment_id: newMoment.id,
+            food_type: item.foodType,
+            portion: item.isFreeChoice ? null : item.portion,
+            is_free_choice: item.isFreeChoice,
+          })))
+          .select()
+        newMoment.meal_plan_items = newItems ?? []
+      }
+
+      if (!plan.value!.meal_plan_moments) plan.value!.meal_plan_moments = []
+      plan.value!.meal_plan_moments.push(newMoment)
+    }
+  }
+
   async function copyMomentToDays(sourceMomentId: string, targetDays: number[]) {
     const source = plan.value?.meal_plan_moments?.find(m => m.id === sourceMomentId)
     if (!source || !plan.value) return
@@ -127,5 +163,5 @@ export function useMealPlan() {
     }
   }
 
-  return { plan, loading, error, fetchOrCreatePlan, addMoment, removeMoment, addItem, removeItem, copyMomentToDays }
+  return { plan, loading, error, fetchOrCreatePlan, addMoment, removeMoment, addItem, removeItem, copyMomentToDays, createMomentForDays }
 }
