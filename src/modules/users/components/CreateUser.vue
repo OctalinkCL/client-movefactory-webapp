@@ -14,7 +14,9 @@ import { useCreateUser } from "../composables/useCreateUser";
 
 const props = defineProps<{
   role: "nutritionist" | "user";
-}>();
+}>()
+
+const emit = defineEmits<{ created: [] }>()
 
 const label = computed(() =>
   props.role === "nutritionist" ? "Staff" : "Usuario",
@@ -29,6 +31,7 @@ async function submit() {
     await createUser({ ...form, role: props.role });
     open.value = false;
     Object.assign(form, { full_name: "", email: "", password: "" });
+    emit("created");
   } catch {
     // error ref is set by composable
   }
