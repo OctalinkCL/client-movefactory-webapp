@@ -24,10 +24,17 @@ export const useAuthStore = defineStore("auth", () => {
     return new Promise<void>((resolve) => {
       supabase.auth.onAuthStateChange((event, newSession) => {
         user.value = newSession?.user ?? null;
-        if (newSession?.user) fetchProfile(newSession.user.id);
-        else profile.value = null;
 
-        if (event === "INITIAL_SESSION") resolve();
+        const settle = () => {
+          if (event === "INITIAL_SESSION") resolve();
+        };
+
+        if (newSession?.user) {
+          fetchProfile(newSession.user.id).finally(settle);
+        } else {
+          profile.value = null;
+          settle();
+        }
       });
     });
   }

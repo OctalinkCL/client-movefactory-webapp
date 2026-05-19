@@ -5,6 +5,7 @@ export const adminRoutes: RouteRecordRaw[] = [
   {
     path: "/admin",
     component: AdminLayout,
+    meta: { requiresAuth: true },
     children: [
       {
         path: "dashboard",
@@ -14,11 +15,13 @@ export const adminRoutes: RouteRecordRaw[] = [
       {
         path: "staff",
         name: "admin-staff",
+        meta: { roles: ["admin"] },
         component: () => import("@/modules/users/StaffView.vue"),
       },
       {
         path: "users",
         name: "admin-users",
+        meta: { roles: ["admin", "nutritionist"] },
         component: () => import("@/modules/users/UsersView.vue"),
       },
     ],
