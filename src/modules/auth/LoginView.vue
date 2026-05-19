@@ -28,16 +28,16 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+  <div class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-sm space-y-8">
       <div class="text-center space-y-1">
-        <h1 class="text-3xl font-bold tracking-tight text-white">Move Factory</h1>
-        <p class="text-zinc-400 text-sm">Ingresá a tu cuenta</p>
+        <h1 class="text-3xl font-bold tracking-tight">Move Factory</h1>
+        <p class="text-muted-foreground text-sm">Ingresá a tu cuenta</p>
       </div>
 
       <form class="space-y-4" @submit.prevent="handleLogin">
         <div class="space-y-2">
-          <label for="email" class="text-sm font-medium text-zinc-300">Email</label>
+          <label for="email" class="text-sm font-medium">Email</label>
           <Input
             id="email"
             v-model="email"
@@ -49,7 +49,7 @@ async function handleLogin() {
         </div>
 
         <div class="space-y-2">
-          <label for="password" class="text-sm font-medium text-zinc-300">Contraseña</label>
+          <label for="password" class="text-sm font-medium">Contraseña</label>
           <Input
             id="password"
             v-model="password"

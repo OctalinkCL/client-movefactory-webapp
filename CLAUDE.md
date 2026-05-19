@@ -152,13 +152,7 @@ Almuerzo:
 
 ---
 
-## 8. Arquitectura de datos — consideración clave
-
-Aunque hoy es para un solo cliente, **todas las tablas deben incluir `gym_id`** desde el inicio. Hoy siempre tendrá el mismo valor, pero permite escalar a múltiples gimnasios en el futuro sin reescribir la base de datos.
-
----
-
-## 9. MVP — qué debe funcionar para lanzar
+## 8. MVP — qué debe funcionar para lanzar
 
 ### Fase 1 — MVP mínimo
 
@@ -177,7 +171,7 @@ Aunque hoy es para un solo cliente, **todas las tablas deben incluir `gym_id`** 
 
 ---
 
-## 10. Cómo trabajamos
+## 9. Cómo trabajamos
 
 - **Pregunta antes de asumir.** Si hay dos formas de resolver algo, muéstralas brevemente antes de implementar.
 - **Buenas prácticas, soluciones simples.** Nada sobreingeniado — si hay una forma simple y una compleja, elige la simple.
