@@ -1,15 +1,14 @@
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
 import { supabase } from "@/lib/supabase";
-import type { User, Session } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/types/profile";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
-  const session = ref<Session | null>(null);
   const profile = ref<Profile | null>(null);
 
-  const isAuthenticated = computed(() => !!session.value);
+  const isAuthenticated = computed(() => !!user.value);
   const role = computed(() => profile.value?.role);
 
   async function fetchProfile(userId: string) {
@@ -24,7 +23,6 @@ export const useAuthStore = defineStore("auth", () => {
   async function init() {
     return new Promise<void>((resolve) => {
       supabase.auth.onAuthStateChange((event, newSession) => {
-        session.value = newSession;
         user.value = newSession?.user ?? null;
         if (newSession?.user) fetchProfile(newSession.user.id);
         else profile.value = null;
@@ -47,5 +45,5 @@ export const useAuthStore = defineStore("auth", () => {
     profile.value = null;
   }
 
-  return { user, session, profile, isAuthenticated, role, init, login, logout };
+  return { user, profile, isAuthenticated, role, init, login, logout };
 });
