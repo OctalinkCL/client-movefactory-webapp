@@ -28,7 +28,9 @@ const { user, loading } = useUser(route.params.id as string)
       <section class="border rounded-md p-4 space-y-3">
         <h2 class="font-medium">Plan de alimentación</h2>
         <p class="text-muted-foreground text-sm">Sin plan asignado.</p>
-        <Button size="sm">Crear plan</Button>
+        <Button size="sm" @click="router.push({ name: 'admin-meal-plan', params: { id: user!.id } })">
+          Crear plan
+        </Button>
       </section>
     </template>
   </div>

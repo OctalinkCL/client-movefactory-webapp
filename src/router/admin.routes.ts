@@ -29,7 +29,13 @@ export const adminRoutes: RouteRecordRaw[] = [
         name: "admin-users-detail",
         meta: { roles: ["admin", "nutritionist"] },
         component: () => import("@/modules/users/UserDetailView.vue"),
-      }
+      },
+      {
+        path: "users/:id/meal-plan",
+        name: "admin-meal-plan",
+        meta: { roles: ["admin", "nutritionist"] },
+        component: () => import("@/modules/meal-plans/MealPlanView.vue"),
+      },
     ],
   },
 ];
