@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 </script>
 
 <template>
   <div class="flex min-h-screen items-center justify-center">
-    <Button>instalado</Button>
+    <Button variant="outline"> Button </Button>
   </div>
 </template>
