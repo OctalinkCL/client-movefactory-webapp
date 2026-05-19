@@ -7,7 +7,7 @@ export const authRoutes: RouteRecordRaw[] = [
     component: AuthLayout,
     children: [
       {
-        path: "/login",
+        path: "login",
         name: "login",
         component: () => import("@/modules/auth/LoginView.vue"),
       },
