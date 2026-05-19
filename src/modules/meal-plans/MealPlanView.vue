@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from '@/modules/users/composables/useUser'
 import { useMealPlan } from './composables/useMealPlan'
@@ -12,7 +12,7 @@ const router = useRouter()
 const userId = route.params.id as string
 
 const { user } = useUser(userId)
-const { plan, loading, error, fetchOrCreatePlan, addMoment, removeMoment, addItem, removeItem } = useMealPlan()
+const { plan, loading, error, fetchOrCreatePlan, addMoment, removeMoment, addItem, removeItem, copyMomentToDays } = useMealPlan()
 const { moments } = useMoments()
 
 onMounted(() => fetchOrCreatePlan(userId))
@@ -33,6 +33,17 @@ async function submitMoment(day: number) {
   momentForm.momentId = ''
   momentForm.note = ''
   addingDay.value = null
+}
+
+// Copy moment to days state
+const copyingMoment = ref<string | null>(null)
+const copyTargetDays = ref<number[]>([])
+
+async function submitCopy(sourceMomentId: string) {
+  if (!copyTargetDays.value.length) return
+  await copyMomentToDays(sourceMomentId, copyTargetDays.value)
+  copyingMoment.value = null
+  copyTargetDays.value = []
 }
 
 // Add item form state
@@ -100,6 +111,33 @@ async function submitItem(planMomentId: string) {
               </button>
             </li>
           </ul>
+
+          <!-- Copy to days -->
+          <div v-if="copyingMoment === m.id" class="flex flex-col gap-2 pt-1">
+            <p class="text-xs font-medium">Repetir en:</p>
+            <div class="flex flex-wrap gap-2">
+              <label
+                v-for="(dayName, di) in DAYS"
+                :key="di"
+                class="flex items-center gap-1 text-xs"
+                :class="{ 'opacity-30 pointer-events-none': di + 1 === m.day }"
+              >
+                <input type="checkbox" :value="di + 1" v-model="copyTargetDays" :disabled="di + 1 === m.day" />
+                {{ dayName.slice(0, 3) }}
+              </label>
+            </div>
+            <div class="flex gap-2">
+              <Button size="sm" @click="submitCopy(m.id)">Aplicar</Button>
+              <Button size="sm" variant="outline" @click="copyingMoment = null; copyTargetDays = []">Cancelar</Button>
+            </div>
+          </div>
+          <button
+            v-else
+            class="text-xs text-muted-foreground hover:underline"
+            @click="copyingMoment = m.id; copyTargetDays = []"
+          >
+            Repetir en otros días
+          </button>
 
           <!-- Add item form -->
           <div v-if="addingItemFor === m.id" class="flex flex-col gap-2 pt-1">
