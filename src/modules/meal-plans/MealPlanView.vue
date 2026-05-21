@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from '@/modules/users/composables/useUser'
 import { useMealPlan } from './composables/useMealPlan'
 import { useMoments } from './composables/useMoments'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import type { MealPlanMoment } from '@/types/meal-plan'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
@@ -15,7 +16,7 @@ const router = useRouter()
 const userId = route.params.id as string
 
 const { user } = useUser(userId)
-const { plan, loading, error, fetchOrCreatePlan, createMoment, removeMoment, removeItem } = useMealPlan()
+const { plan, loading, error, fetchOrCreatePlan, createMoment, updateMoment, removeMoment, removeItem } = useMealPlan()
 const { moments } = useMoments()
 
 onMounted(() => fetchOrCreatePlan(userId))
@@ -43,15 +44,30 @@ function momentsCountForDay(day: number) {
   return plan.value?.meal_plan_moments?.filter(m => m.days.includes(day)).length ?? 0
 }
 
-// Dialog form
+// Sheet form
 const dialogOpen = ref(false)
+const editingMomentId = ref<string | null>(null)
+const isEditing = computed(() => editingMomentId.value !== null)
+
 const form = reactive({
   name: '',
   momentId: '',
   note: '',
   days: [] as number[],
-  items: [{ foodType: '', portion: '' }] as { foodType: string; portion: string }[],
+  items: [{ foodType: '', portion: '' }] as { id?: string; foodType: string; portion: string }[],
 })
+
+function openEdit(m: MealPlanMoment) {
+  editingMomentId.value = m.id
+  form.name = m.name ?? ''
+  form.momentId = m.moment_id
+  form.note = m.note ?? ''
+  form.days = [...m.days]
+  form.items = m.meal_plan_items?.length
+    ? m.meal_plan_items.map(i => ({ id: i.id, foodType: i.food_type, portion: i.portion ?? 'libre' }))
+    : [{ foodType: '', portion: '' }]
+  dialogOpen.value = true
+}
 
 function toggleDay(day: number) {
   const i = form.days.indexOf(day)
@@ -77,13 +93,18 @@ function resetForm() {
   form.note = ''
   form.days = []
   form.items = [{ foodType: '', portion: '' }]
+  editingMomentId.value = null
   dialogOpen.value = false
 }
 
 async function submitForm() {
   if (!form.momentId || !form.days.length || !plan.value) return
   const filledItems = form.items.filter(i => i.foodType)
-  await createMoment(plan.value.id, form.name || null, form.momentId, form.days, form.note, filledItems)
+  if (isEditing.value) {
+    await updateMoment(editingMomentId.value!, form.name || null, form.momentId, form.days, form.note, filledItems)
+  } else {
+    await createMoment(plan.value.id, form.name || null, form.momentId, form.days, form.note, filledItems)
+  }
   resetForm()
 }
 </script>
@@ -166,9 +187,14 @@ async function submitForm() {
 
           <p v-if="m.note" class="text-xs text-muted-foreground italic">{{ m.note }}</p>
 
-          <button class="text-xs text-destructive hover:underline" @click="removeMoment(m.id)">
-            Eliminar momento
-          </button>
+          <div class="flex gap-3">
+            <button class="text-xs text-muted-foreground hover:underline" @click="openEdit(m)">
+              Editar
+            </button>
+            <button class="text-xs text-destructive hover:underline" @click="removeMoment(m.id)">
+              Eliminar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -181,7 +207,7 @@ async function submitForm() {
         </SheetTrigger>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Nuevo momento</SheetTitle>
+            <SheetTitle>{{ isEditing ? 'Editar momento' : 'Nuevo momento' }}</SheetTitle>
           </SheetHeader>
 
           <div class="space-y-5 py-2">
@@ -281,7 +307,9 @@ async function submitForm() {
 
           <SheetFooter>
             <Button variant="outline" @click="resetForm">Cancelar</Button>
-            <Button @click="submitForm" :disabled="!form.momentId || !form.days.length">Guardar</Button>
+            <Button @click="submitForm" :disabled="!form.momentId || !form.days.length">
+              {{ isEditing ? 'Guardar cambios' : 'Guardar' }}
+            </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>

@@ -93,5 +93,55 @@ export function useMealPlan() {
       moment.meal_plan_items = moment.meal_plan_items.filter(i => i.id !== itemId)
   }
 
-  return { plan, loading, error, fetchOrCreatePlan, createMoment, removeMoment, removeItem }
+  async function updateMoment(
+    momentId: string,
+    name: string | null,
+    momentTypeId: string,
+    days: number[],
+    note: string | undefined,
+    items: { foodType: string; portion: string }[]
+  ) {
+    const { data: updated, error: err } = await supabase
+      .from('meal_plan_moments')
+      .update({ name: name || null, moment_id: momentTypeId, days, note: note || null })
+      .eq('id', momentId)
+      .select('*, moment:moments(*)')
+      .single()
+
+    if (err) { error.value = err.message; return }
+
+    const existingItems = plan.value?.meal_plan_moments?.find(m => m.id === momentId)?.meal_plan_items ?? []
+    const normalize = (p: string) => p === 'libre' ? null : p
+    const itemsChanged =
+      items.length !== existingItems.length ||
+      items.some((item, i) =>
+        item.foodType !== existingItems[i]?.food_type ||
+        normalize(item.portion) !== existingItems[i]?.portion
+      )
+
+    let newItems: any[] = []
+    if (itemsChanged) {
+      await supabase.from('meal_plan_items').delete().eq('meal_plan_moment_id', momentId)
+      if (items.length) {
+        const { data } = await supabase
+          .from('meal_plan_items')
+          .insert(items.map(item => ({
+            meal_plan_moment_id: momentId,
+            food_type: item.foodType,
+            portion: normalize(item.portion),
+            is_free_choice: false,
+          })))
+          .select()
+        newItems = data ?? []
+      }
+    } else {
+      newItems = existingItems
+    }
+
+    updated.meal_plan_items = newItems
+    const idx = plan.value?.meal_plan_moments?.findIndex(m => m.id === momentId) ?? -1
+    if (idx !== -1) plan.value!.meal_plan_moments![idx] = updated
+  }
+
+  return { plan, loading, error, fetchOrCreatePlan, createMoment, updateMoment, removeMoment, removeItem }
 }
