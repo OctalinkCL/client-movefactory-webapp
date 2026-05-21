@@ -15,34 +15,60 @@ const router = useRouter()
 const userId = route.params.id as string
 
 const { user } = useUser(userId)
-const { plan, loading, error, fetchOrCreatePlan, removeMoment, removeItem, createMomentForDays } = useMealPlan()
+const { plan, loading, error, fetchOrCreatePlan, createMoment, removeMoment, removeItem } = useMealPlan()
 const { moments } = useMoments()
 
 onMounted(() => fetchOrCreatePlan(userId))
 
-const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
-const selectedDay = ref(1)
+const DAY_LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+const DAY_NAMES  = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
-function momentsByDay(day: number) {
-  return plan.value?.meal_plan_moments?.filter(m => m.day === day) ?? []
+const FOOD_TYPES = ['Proteína', 'Carbohidrato', 'Grasa', 'Verdura', 'Fruta', 'Lácteo']
+const PORTION_OPTIONS = [
+  { value: '1', label: '1 porción' },
+  { value: '2', label: '2 porciones' },
+  { value: '3', label: '3 porciones' },
+  { value: '4', label: '4 porciones' },
+  { value: '5', label: '5 porciones' },
+  { value: '6', label: '6 porciones' },
+  { value: 'libre', label: 'Libre elección' },
+]
+
+function portionLabel(value: string | null) {
+  if (!value || value === 'libre') return 'Libre elección'
+  return PORTION_OPTIONS.find(p => p.value === value)?.label ?? value
 }
 
-// New moment form
+function momentsCountForDay(day: number) {
+  return plan.value?.meal_plan_moments?.filter(m => m.days.includes(day)).length ?? 0
+}
+
+// Dialog form
 const dialogOpen = ref(false)
 const form = reactive({
+  name: '',
   momentId: '',
   note: '',
   days: [] as number[],
-  items: [] as { foodType: string; portion: string; isFreeChoice: boolean }[],
+  items: [] as { foodType: string; portion: string }[],
 })
-const newItem = reactive({ foodType: '', portion: '', isFreeChoice: false })
+const newItem = reactive({ foodType: '', portion: '' })
+
+function toggleDay(day: number) {
+  const i = form.days.indexOf(day)
+  if (i === -1) form.days.push(day)
+  else form.days.splice(i, 1)
+}
+
+function setWeekdays() { form.days = [1, 2, 3, 4, 5] }
+function setWeekend()  { form.days = [6, 7] }
+function setAll()      { form.days = [1, 2, 3, 4, 5, 6, 7] }
 
 function addItemToForm() {
-  if (!newItem.foodType) return
+  if (!newItem.foodType || !newItem.portion) return
   form.items.push({ ...newItem })
   newItem.foodType = ''
   newItem.portion = ''
-  newItem.isFreeChoice = false
 }
 
 function removeItemFromForm(index: number) {
@@ -50,16 +76,19 @@ function removeItemFromForm(index: number) {
 }
 
 function resetForm() {
+  form.name = ''
   form.momentId = ''
   form.note = ''
   form.days = []
   form.items = []
+  newItem.foodType = ''
+  newItem.portion = ''
   dialogOpen.value = false
 }
 
 async function submitForm() {
   if (!form.momentId || !form.days.length || !plan.value) return
-  await createMomentForDays(plan.value.id, form.days, form.momentId, form.note, form.items)
+  await createMoment(plan.value.id, form.name || null, form.momentId, form.days, form.note, form.items)
   resetForm()
 }
 </script>
@@ -75,52 +104,189 @@ async function submitForm() {
         <h1 class="text-2xl font-semibold">Plan de alimentación</h1>
         <p v-if="user" class="text-muted-foreground text-sm">{{ user.full_name }}</p>
       </div>
+    </div>
+
+    <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
+    <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
+
+    <div v-if="plan" class="space-y-4">
+      <!-- Weekly coverage header -->
+      <div class="border rounded-md p-3">
+        <p class="text-xs uppercase tracking-wide text-muted-foreground mb-2">Cobertura semanal</p>
+        <div class="grid grid-cols-7 gap-1">
+          <div
+            v-for="(name, di) in DAY_NAMES"
+            :key="di"
+            class="flex flex-col items-center gap-1"
+          >
+            <span class="text-xs font-medium">{{ name }}</span>
+            <span class="text-xs text-muted-foreground">{{ momentsCountForDay(di + 1) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Moment cards -->
+      <div class="space-y-3">
+        <div
+          v-for="m in plan.meal_plan_moments"
+          :key="m.id"
+          class="border rounded-md p-4 space-y-3"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs border rounded-full px-2 py-0.5 font-medium">{{ m.moment?.name }}</span>
+              </div>
+              <p v-if="m.name" class="font-semibold text-sm">{{ m.name }}</p>
+              <p class="text-xs text-muted-foreground">
+                {{ m.meal_plan_items?.length ?? 0 }} tipos ·
+                {{ m.meal_plan_items?.filter(i => i.portion).length ?? 0 }} porciones
+              </p>
+            </div>
+            <!-- Day indicators -->
+            <div class="flex gap-1 flex-shrink-0">
+              <span
+                v-for="(label, di) in DAY_LABELS"
+                :key="di"
+                class="w-6 h-6 rounded text-xs flex items-center justify-center font-medium"
+                :class="m.days.includes(di + 1)
+                  ? 'bg-foreground text-background'
+                  : 'bg-muted text-muted-foreground'"
+              >{{ label }}</span>
+            </div>
+          </div>
+
+          <!-- Item chips -->
+          <div v-if="m.meal_plan_items?.length" class="flex flex-wrap gap-2">
+            <span
+              v-for="item in m.meal_plan_items"
+              :key="item.id"
+              class="flex items-center gap-1 border rounded-full px-2 py-0.5 text-xs"
+            >
+              {{ item.food_type }}
+              <span class="text-muted-foreground">×{{ portionLabel(item.portion) }}</span>
+              <button class="text-destructive hover:text-destructive/70 ml-0.5" @click="removeItem(item.id, m.id)">×</button>
+            </span>
+          </div>
+
+          <p v-if="m.note" class="text-xs text-muted-foreground italic">{{ m.note }}</p>
+
+          <button class="text-xs text-destructive hover:underline" @click="removeMoment(m.id)">
+            Eliminar momento
+          </button>
+        </div>
+      </div>
+
+      <!-- Create moment dialog -->
       <Dialog v-model:open="dialogOpen">
         <DialogTrigger as-child>
-          <Button>+ Nuevo momento</Button>
+          <button class="w-full border border-dashed rounded-md py-3 text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
+            + Crear otro momento
+          </button>
         </DialogTrigger>
         <DialogContent :aria-describedby="undefined" class="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nuevo momento</DialogTitle>
           </DialogHeader>
 
-          <div class="space-y-4 py-2">
-            <select v-model="form.momentId" class="w-full border rounded-md px-3 py-2 text-sm bg-background">
-              <option value="" disabled>Seleccionar tipo de momento</option>
-              <option v-for="m in moments" :key="m.id" :value="m.id">{{ m.name }}</option>
-            </select>
-
-            <Input v-model="form.note" placeholder="Nota (opcional)" />
-
-            <!-- Items -->
-            <div class="space-y-2">
-              <p class="text-sm font-medium">Ítems</p>
-              <ul class="space-y-1">
-                <li v-for="(item, i) in form.items" :key="i" class="flex items-center justify-between text-sm">
-                  <span>{{ item.isFreeChoice ? '🟢 Libre elección' : `${item.portion} ${item.foodType}` }}</span>
-                  <button class="text-xs text-destructive hover:underline" @click="removeItemFromForm(i)">×</button>
-                </li>
-              </ul>
-              <div class="flex flex-col gap-2">
-                <Input v-model="newItem.foodType" placeholder="Tipo de alimento (ej: Proteína)" />
-                <Input v-if="!newItem.isFreeChoice" v-model="newItem.portion" placeholder="Porción (ej: 250g)" />
-                <label class="flex items-center gap-2 text-sm">
-                  <input type="checkbox" v-model="newItem.isFreeChoice" />
-                  Libre elección
-                </label>
-                <Button size="sm" variant="outline" @click="addItemToForm">+ Agregar ítem</Button>
-              </div>
+          <div class="space-y-5 py-2">
+            <!-- Nombre -->
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium">Nombre</label>
+              <Input v-model="form.name" placeholder="Ej: Desayuno Semanal" />
             </div>
 
-            <!-- Day checkboxes -->
+            <!-- Tipo de momento -->
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium">Tipo de momento <span class="text-destructive">*</span></label>
+              <select v-model="form.momentId" class="w-full border rounded-md px-3 py-2 text-sm bg-background">
+                <option value="" disabled>Selecciona un momento...</option>
+                <option v-for="m in moments" :key="m.id" :value="m.id">{{ m.name }}</option>
+              </select>
+            </div>
+
+            <!-- Composición -->
             <div class="space-y-2">
-              <p class="text-sm font-medium">Aplicar en los días</p>
-              <div class="flex flex-wrap gap-3">
-                <label v-for="(dayName, di) in DAYS" :key="di" class="flex items-center gap-1 text-sm">
-                  <input type="checkbox" :value="di + 1" v-model="form.days" />
-                  {{ dayName.slice(0, 3) }}
-                </label>
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium">Composición <span class="text-destructive">*</span></label>
+                <span class="text-xs text-muted-foreground">
+                  {{ form.items.length }} tipos · {{ form.items.length }} porciones
+                </span>
               </div>
+
+              <!-- Items ya agregados -->
+              <div v-if="form.items.length" class="space-y-1">
+                <div
+                  v-for="(item, i) in form.items"
+                  :key="i"
+                  class="flex items-center gap-2 border rounded-md px-3 py-2 text-sm"
+                >
+                  <span class="flex-1">{{ item.foodType }}</span>
+                  <span class="text-muted-foreground">{{ portionLabel(item.portion) }}</span>
+                  <button class="text-destructive text-xs" @click="removeItemFromForm(i)">×</button>
+                </div>
+              </div>
+
+              <!-- Agregar nuevo ítem -->
+              <div class="flex gap-2">
+                <select v-model="newItem.foodType" class="flex-1 border rounded-md px-2 py-1.5 text-sm bg-background">
+                  <option value="" disabled>Selecciona un tipo...</option>
+                  <option v-for="ft in FOOD_TYPES" :key="ft" :value="ft">{{ ft }}</option>
+                </select>
+                <select v-model="newItem.portion" class="w-32 border rounded-md px-2 py-1.5 text-sm bg-background">
+                  <option value="" disabled>Porciones</option>
+                  <option v-for="p in PORTION_OPTIONS" :key="p.value" :value="p.value">{{ p.label }}</option>
+                </select>
+                <button
+                  class="border rounded-md px-2 py-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                  @click="addItemToForm"
+                >×</button>
+              </div>
+              <button
+                class="w-full border border-dashed rounded-md py-2 text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                @click="addItemToForm"
+              >
+                + Agregar tipo de comida
+              </button>
+            </div>
+
+            <hr />
+
+            <!-- Días asignados -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium">Días asignados <span class="text-destructive">*</span></label>
+                <div class="flex gap-2 text-xs text-muted-foreground">
+                  <button class="hover:text-foreground" @click="setWeekdays">L–V</button>
+                  <button class="hover:text-foreground" @click="setWeekend">Finde</button>
+                  <button class="hover:text-foreground" @click="setAll">Todos</button>
+                </div>
+              </div>
+              <div class="flex gap-1.5">
+                <button
+                  v-for="(label, di) in DAY_LABELS"
+                  :key="di"
+                  class="w-9 h-9 rounded-md text-sm font-medium border transition-colors"
+                  :class="form.days.includes(di + 1)
+                    ? 'bg-foreground text-background border-foreground'
+                    : 'hover:bg-muted'"
+                  @click="toggleDay(di + 1)"
+                >{{ label }}</button>
+              </div>
+              <p v-if="!form.days.length" class="text-xs text-muted-foreground">Selecciona al menos un día.</p>
+            </div>
+
+            <hr />
+
+            <!-- Notas -->
+            <div class="space-y-1.5">
+              <label class="text-sm font-medium">Notas para el paciente <span class="text-muted-foreground text-xs font-normal">(opcional)</span></label>
+              <textarea
+                v-model="form.note"
+                rows="3"
+                placeholder="Ej: Preferir pescado o pollo. Evitar fritos."
+                class="w-full border rounded-md px-3 py-2 text-sm bg-background resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+              />
             </div>
           </div>
 
@@ -130,54 +296,6 @@ async function submitForm() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-
-    <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-    <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
-
-    <!-- Day tabs -->
-    <div v-if="plan" class="space-y-4">
-      <div class="flex gap-1 flex-wrap">
-        <button
-          v-for="(dayName, di) in DAYS"
-          :key="di"
-          class="px-3 py-1 rounded-md text-sm border transition-colors"
-          :class="selectedDay === di + 1 ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
-          @click="selectedDay = di + 1"
-        >
-          {{ dayName.slice(0, 3) }}
-        </button>
-      </div>
-
-      <!-- Selected day content -->
-      <div class="space-y-3">
-        <p v-if="momentsByDay(selectedDay).length === 0" class="text-sm text-muted-foreground">
-          Sin momentos para este día.
-        </p>
-        <div
-          v-for="m in momentsByDay(selectedDay)"
-          :key="m.id"
-          class="border rounded-md p-3 space-y-2"
-        >
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-sm">{{ m.moment?.name }}</span>
-            <button class="text-xs text-destructive hover:underline" @click="removeMoment(m.id)">
-              Eliminar
-            </button>
-          </div>
-          <p v-if="m.note" class="text-xs text-muted-foreground">{{ m.note }}</p>
-          <ul class="space-y-1">
-            <li
-              v-for="item in m.meal_plan_items"
-              :key="item.id"
-              class="flex items-center justify-between text-sm"
-            >
-              <span>{{ item.is_free_choice ? '🟢 Libre elección' : `${item.portion} ${item.food_type}` }}</span>
-              <button class="text-xs text-destructive hover:underline" @click="removeItem(item.id, m.id)">×</button>
-            </li>
-          </ul>
-        </div>
-      </div>
     </div>
   </div>
 </template>

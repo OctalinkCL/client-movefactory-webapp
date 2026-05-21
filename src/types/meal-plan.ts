@@ -17,7 +17,8 @@ export interface MealPlanItem {
 export interface MealPlanMoment {
   id: string
   meal_plan_id: string
-  day: number
+  days: number[]
+  name: string | null
   moment_id: string
   note: string | null
   created_at: string
