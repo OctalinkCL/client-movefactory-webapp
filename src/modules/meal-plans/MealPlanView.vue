@@ -50,9 +50,8 @@ const form = reactive({
   momentId: '',
   note: '',
   days: [] as number[],
-  items: [] as { foodType: string; portion: string }[],
+  items: [{ foodType: '', portion: '' }] as { foodType: string; portion: string }[],
 })
-const newItem = reactive({ foodType: '', portion: '' })
 
 function toggleDay(day: number) {
   const i = form.days.indexOf(day)
@@ -64,11 +63,8 @@ function setWeekdays() { form.days = [1, 2, 3, 4, 5] }
 function setWeekend()  { form.days = [6, 7] }
 function setAll()      { form.days = [1, 2, 3, 4, 5, 6, 7] }
 
-function addItemToForm() {
-  if (!newItem.foodType || !newItem.portion) return
-  form.items.push({ ...newItem })
-  newItem.foodType = ''
-  newItem.portion = ''
+function addRow() {
+  form.items.push({ foodType: '', portion: '' })
 }
 
 function removeItemFromForm(index: number) {
@@ -80,15 +76,14 @@ function resetForm() {
   form.momentId = ''
   form.note = ''
   form.days = []
-  form.items = []
-  newItem.foodType = ''
-  newItem.portion = ''
+  form.items = [{ foodType: '', portion: '' }]
   dialogOpen.value = false
 }
 
 async function submitForm() {
   if (!form.momentId || !form.days.length || !plan.value) return
-  await createMoment(plan.value.id, form.name || null, form.momentId, form.days, form.note, form.items)
+  const filledItems = form.items.filter(i => i.foodType)
+  await createMoment(plan.value.id, form.name || null, form.momentId, form.days, form.note, filledItems)
   resetForm()
 }
 </script>
@@ -208,43 +203,37 @@ async function submitForm() {
             <!-- Composición -->
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <label class="text-sm font-medium">Composición <span class="text-destructive">*</span></label>
+                <label class="text-sm font-medium">Composición</label>
                 <span class="text-xs text-muted-foreground">
-                  {{ form.items.length }} tipos · {{ form.items.length }} porciones
+                  {{ form.items.filter(i => i.foodType).length }} tipos ·
+                  {{ form.items.filter(i => i.foodType && i.portion && i.portion !== 'libre').length }} porciones
                 </span>
               </div>
 
-              <!-- Items ya agregados -->
-              <div v-if="form.items.length" class="space-y-1">
+              <div class="space-y-1.5">
                 <div
                   v-for="(item, i) in form.items"
                   :key="i"
-                  class="flex items-center gap-2 border rounded-md px-3 py-2 text-sm"
+                  class="flex gap-2"
                 >
-                  <span class="flex-1">{{ item.foodType }}</span>
-                  <span class="text-muted-foreground">{{ portionLabel(item.portion) }}</span>
-                  <button class="text-destructive text-xs" @click="removeItemFromForm(i)">×</button>
+                  <select v-model="item.foodType" class="flex-1 border rounded-md px-2 py-1.5 text-sm bg-background">
+                    <option value="" disabled>Selecciona un tipo...</option>
+                    <option v-for="ft in FOOD_TYPES" :key="ft" :value="ft">{{ ft }}</option>
+                  </select>
+                  <select v-model="item.portion" class="w-36 border rounded-md px-2 py-1.5 text-sm bg-background">
+                    <option value="" disabled>Porciones</option>
+                    <option v-for="p in PORTION_OPTIONS" :key="p.value" :value="p.value">{{ p.label }}</option>
+                  </select>
+                  <button
+                    class="border rounded-md px-2.5 text-muted-foreground hover:text-destructive transition-colors"
+                    @click="removeItemFromForm(i)"
+                  >×</button>
                 </div>
               </div>
 
-              <!-- Agregar nuevo ítem -->
-              <div class="flex gap-2">
-                <select v-model="newItem.foodType" class="flex-1 border rounded-md px-2 py-1.5 text-sm bg-background">
-                  <option value="" disabled>Selecciona un tipo...</option>
-                  <option v-for="ft in FOOD_TYPES" :key="ft" :value="ft">{{ ft }}</option>
-                </select>
-                <select v-model="newItem.portion" class="w-32 border rounded-md px-2 py-1.5 text-sm bg-background">
-                  <option value="" disabled>Porciones</option>
-                  <option v-for="p in PORTION_OPTIONS" :key="p.value" :value="p.value">{{ p.label }}</option>
-                </select>
-                <button
-                  class="border rounded-md px-2 py-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                  @click="addItemToForm"
-                >×</button>
-              </div>
               <button
                 class="w-full border border-dashed rounded-md py-2 text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-                @click="addItemToForm"
+                @click="addRow"
               >
                 + Agregar tipo de comida
               </button>
