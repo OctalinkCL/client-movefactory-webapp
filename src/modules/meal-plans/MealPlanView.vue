@@ -7,8 +7,8 @@ import { useMoments } from './composables/useMoments'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
-} from '@/components/ui/dialog'
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
+} from '@/components/ui/sheet'
 
 const route = useRoute()
 const router = useRouter()
@@ -173,16 +173,16 @@ async function submitForm() {
       </div>
 
       <!-- Create moment dialog -->
-      <Dialog v-model:open="dialogOpen">
-        <DialogTrigger as-child>
+      <Sheet v-model:open="dialogOpen">
+        <SheetTrigger as-child>
           <button class="w-full border border-dashed rounded-md py-3 text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
             + Crear otro momento
           </button>
-        </DialogTrigger>
-        <DialogContent :aria-describedby="undefined" class="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Nuevo momento</DialogTitle>
-          </DialogHeader>
+        </SheetTrigger>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Nuevo momento</SheetTitle>
+          </SheetHeader>
 
           <div class="space-y-5 py-2">
             <!-- Nombre -->
@@ -279,12 +279,12 @@ async function submitForm() {
             </div>
           </div>
 
-          <DialogFooter>
+          <SheetFooter>
             <Button variant="outline" @click="resetForm">Cancelar</Button>
             <Button @click="submitForm" :disabled="!form.momentId || !form.days.length">Guardar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   </div>
 </template>
