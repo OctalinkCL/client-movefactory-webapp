@@ -28,7 +28,7 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center p-4">
+  <div class=" flex items-center justify-center p-4">
     <div class="w-full max-w-sm space-y-8">
       <div class="text-center space-y-1">
         <h1 class="text-3xl font-bold tracking-tight">Move Factory</h1>
