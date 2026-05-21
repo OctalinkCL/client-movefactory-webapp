@@ -10,13 +10,16 @@ import type { MealPlanMoment } from '@/types/meal-plan'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog'
 
 const route = useRoute()
 const router = useRouter()
 const userId = route.params.id as string
 
 const { user } = useUser(userId)
-const { plan, loading, error, fetchOrCreatePlan, createMoment, updateMoment, removeMoment, removeItem } = useMealPlan()
+const { plan, loading, error, fetchOrCreatePlan, createMoment, updateMoment, removeMoment } = useMealPlan()
 const { moments } = useMoments()
 
 onMounted(() => fetchOrCreatePlan(userId))
@@ -42,6 +45,15 @@ function portionLabel(value: string | null) {
 
 function momentsCountForDay(day: number) {
   return plan.value?.meal_plan_moments?.filter(m => m.days.includes(day)).length ?? 0
+}
+
+// Delete confirmation
+const deletingMoment = ref<MealPlanMoment | null>(null)
+
+async function confirmDelete() {
+  if (!deletingMoment.value) return
+  await removeMoment(deletingMoment.value.id)
+  deletingMoment.value = null
 }
 
 // Sheet form
@@ -177,11 +189,10 @@ async function submitForm() {
             <span
               v-for="item in m.meal_plan_items"
               :key="item.id"
-              class="flex items-center gap-1 border rounded-full px-2 py-0.5 text-xs"
+              class="border rounded-full px-2 py-0.5 text-xs"
             >
               {{ item.food_type }}
               <span class="text-muted-foreground">×{{ portionLabel(item.portion) }}</span>
-              <button class="text-destructive hover:text-destructive/70 ml-0.5" @click="removeItem(item.id, m.id)">×</button>
             </span>
           </div>
 
@@ -191,7 +202,7 @@ async function submitForm() {
             <button class="text-xs text-muted-foreground hover:underline" @click="openEdit(m)">
               Editar
             </button>
-            <button class="text-xs text-destructive hover:underline" @click="removeMoment(m.id)">
+            <button class="text-xs text-destructive hover:underline" @click="deletingMoment = m">
               Eliminar
             </button>
           </div>
@@ -313,6 +324,40 @@ async function submitForm() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+      <!-- Delete confirmation dialog -->
+      <Dialog :open="!!deletingMoment" @update:open="v => { if (!v) deletingMoment = null }">
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Eliminar este momento?</DialogTitle>
+            <DialogDescription>
+              <span class="font-medium text-foreground">{{ deletingMoment?.name ?? deletingMoment?.moment?.name }}</span>
+              · {{ deletingMoment?.days.length }} día(s) afectado(s)
+            </DialogDescription>
+          </DialogHeader>
+
+          <div class="space-y-2">
+            <p class="text-xs uppercase tracking-wide text-muted-foreground">Días afectados</p>
+            <div class="flex gap-1.5">
+              <span
+                v-for="(label, di) in DAY_LABELS"
+                :key="di"
+                class="w-8 h-8 rounded text-xs flex items-center justify-center font-medium transition-opacity"
+                :class="deletingMoment?.days.includes(di + 1)
+                  ? 'bg-amber-100 text-amber-800'
+                  : 'bg-muted text-muted-foreground opacity-30'"
+              >{{ label }}</span>
+            </div>
+            <p class="text-xs text-muted-foreground">
+              Estos días quedarán sin momento de "{{ deletingMoment?.moment?.name }}" hasta que asignes otro.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" @click="deletingMoment = null">Cancelar</Button>
+            <Button variant="destructive" @click="confirmDelete">Sí, eliminar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   </div>
 </template>
