@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from './composables/useUser'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
+} from '@/components/ui/sheet'
 
 const route = useRoute()
 const router = useRouter()
 const userId = route.params.id as string
-const { user, loading } = useUser(userId)
+const { user, loading, updateProfile } = useUser(userId)
 
 const plan = ref<{ created_at: string; updated_at: string } | null>(null)
 onMounted(async () => {
@@ -22,6 +26,41 @@ onMounted(async () => {
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function sexLabel(sex: string | null) {
+  if (sex === 'male') return 'Masculino'
+  if (sex === 'female') return 'Femenino'
+  return null
+}
+
+const hasFixedData = () => !!(user.value?.birth_date || user.value?.sex || user.value?.height)
+
+// Sheet datos del paciente
+const profileSheetOpen = ref(false)
+const profileForm = reactive({
+  birth_date: '',
+  sex: '' as 'male' | 'female' | '',
+  height: '',
+  phone: '',
+})
+
+function openProfileSheet() {
+  profileForm.birth_date = user.value?.birth_date ?? ''
+  profileForm.sex = user.value?.sex ?? ''
+  profileForm.height = user.value?.height?.toString() ?? ''
+  profileForm.phone = user.value?.phone ?? ''
+  profileSheetOpen.value = true
+}
+
+async function saveProfile() {
+  await updateProfile({
+    birth_date: profileForm.birth_date || null,
+    sex: profileForm.sex || null,
+    height: profileForm.height ? parseFloat(profileForm.height) : null,
+    phone: profileForm.phone || null,
+  })
+  profileSheetOpen.value = false
 }
 </script>
 
@@ -42,6 +81,71 @@ function formatDate(iso: string) {
         <p class="text-muted-foreground text-sm capitalize">{{ user.role }}</p>
       </div>
 
+      <!-- Datos del paciente -->
+      <section class="border rounded-md p-4 space-y-3">
+        <h2 class="font-medium">Datos del paciente</h2>
+        <template v-if="hasFixedData()">
+          <div class="grid grid-cols-2 gap-3">
+            <div v-if="user.birth_date" class="space-y-0.5">
+              <p class="text-xs text-muted-foreground">Fecha de nacimiento</p>
+              <p class="text-sm">{{ formatDate(user.birth_date) }}</p>
+            </div>
+            <div v-if="user.sex" class="space-y-0.5">
+              <p class="text-xs text-muted-foreground">Sexo</p>
+              <p class="text-sm">{{ sexLabel(user.sex) }}</p>
+            </div>
+            <div v-if="user.height" class="space-y-0.5">
+              <p class="text-xs text-muted-foreground">Estatura</p>
+              <p class="text-sm">{{ user.height }} cm</p>
+            </div>
+            <div v-if="user.phone" class="space-y-0.5">
+              <p class="text-xs text-muted-foreground">Teléfono</p>
+              <p class="text-sm">{{ user.phone }}</p>
+            </div>
+          </div>
+        </template>
+        <p v-else class="text-muted-foreground text-sm">Sin datos registrados.</p>
+        <Sheet v-model:open="profileSheetOpen">
+          <SheetTrigger as-child>
+            <Button size="sm" variant="outline" @click="openProfileSheet">
+              {{ hasFixedData() ? 'Editar datos' : 'Completar datos' }}
+            </Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Datos del paciente</SheetTitle>
+            </SheetHeader>
+            <div class="space-y-4 py-2">
+              <div class="space-y-1.5">
+                <label class="text-sm font-medium">Fecha de nacimiento</label>
+                <Input v-model="profileForm.birth_date" type="date" />
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm font-medium">Sexo</label>
+                <select v-model="profileForm.sex" class="w-full border rounded-md px-3 py-2 text-sm bg-background">
+                  <option value="">Sin especificar</option>
+                  <option value="male">Masculino</option>
+                  <option value="female">Femenino</option>
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm font-medium">Estatura (cm)</label>
+                <Input v-model="profileForm.height" type="number" step="0.1" placeholder="170" />
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm font-medium">Teléfono</label>
+                <Input v-model="profileForm.phone" type="tel" placeholder="+56 9 1234 5678" />
+              </div>
+            </div>
+            <SheetFooter>
+              <Button variant="outline" @click="profileSheetOpen = false">Cancelar</Button>
+              <Button @click="saveProfile">Guardar</Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      </section>
+
+      <!-- Plan de alimentación -->
       <section class="border rounded-md p-4 space-y-3">
         <h2 class="font-medium">Plan de alimentación</h2>
         <template v-if="plan">
@@ -53,6 +157,15 @@ function formatDate(iso: string) {
         <p v-else class="text-muted-foreground text-sm">Sin plan asignado.</p>
         <Button size="sm" @click="router.push({ name: 'admin-meal-plan', params: { id: user!.id } })">
           {{ plan ? 'Ver plan' : 'Crear plan' }}
+        </Button>
+      </section>
+
+      <!-- Seguimiento -->
+      <section class="border rounded-md p-4 space-y-3">
+        <h2 class="font-medium">Seguimiento</h2>
+        <p class="text-muted-foreground text-sm">Registro de mediciones y evolución del paciente.</p>
+        <Button size="sm" @click="router.push({ name: 'admin-tracking', params: { id: user!.id } })">
+          Ver seguimiento
         </Button>
       </section>
     </template>

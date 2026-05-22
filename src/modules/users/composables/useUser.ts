@@ -20,7 +20,14 @@ export function useUser(id: string) {
     loading.value = false
   }
 
+  async function updateProfile(fields: Partial<Pick<Profile, 'birth_date' | 'sex' | 'height' | 'phone' | 'full_name'>>) {
+    const { error: err } = await supabase.from('profiles').update(fields).eq('id', id)
+    if (err) { error.value = err.message; return false }
+    if (user.value) user.value = { ...user.value, ...fields }
+    return true
+  }
+
   onMounted(fetchUser)
 
-  return { user, loading, error }
+  return { user, loading, error, updateProfile }
 }
