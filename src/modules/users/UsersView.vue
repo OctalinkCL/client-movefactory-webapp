@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import CreateUser from './components/CreateUser.vue'
 import { useUsers } from './composables/useUsers'
 import EmptyItem from '@/components/shared/EmptyItem.vue'
+import { getInitials } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -11,6 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const router = useRouter()
@@ -45,15 +51,25 @@ function goToDetail(id: string) {
 
     <div class="border rounded-lg overflow-hidden" v-else>
       <Table>
-        <TableHeader class="bg-slate-50">
+        <TableHeader>
           <TableRow>
             <TableHead>Nombre</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Teléfono </TableHead>
             <TableHead class="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-for="user in users" :key="user.id">
-            <TableCell class="font-medium">{{ user.full_name }}</TableCell>
+            <TableCell class="font-medium flex items-center gap-2">
+              <Avatar class="bg-lime-600">
+                <AvatarImage src="user.avatar_url" :alt="user.full_name" v-if="user.avatar_url" />
+                <AvatarFallback class="text-xs" v-else>{{ getInitials(user.full_name) }}</AvatarFallback>
+              </Avatar>
+              {{ user.full_name }}
+            </TableCell>
+            <TableCell>{{ user.email }}</TableCell>
+            <TableCell>{{ user.phone }}</TableCell>
             <TableCell class="text-right hover:underline cursor-pointer" @click="goToDetail(user.id)">
               Ver Usuario
             </TableCell>
