@@ -9,6 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -21,7 +22,11 @@ async function logout() {
 
 <template>
     <DropdownMenu>
-        <DropdownMenuTrigger>
+        <DropdownMenuTrigger class="flex gap-2 item-center cursor-pointer">
+            <Avatar>
+                <AvatarImage :src="auth.profile?.avatar_url" v-if="auth.profile?.avatar_url" />
+                <AvatarFallback class="text-xs font-medium" v-else>{{ auth.profile?.initials }}</AvatarFallback>
+            </Avatar>
             <div class="grid text-left text-sm leading-tight">
                 <span class="truncate font-medium">{{ auth.profile?.full_name }}</span>
                 <span class="text-muted-foreground truncate text-xs">{{ auth.profile?.role }}</span>
