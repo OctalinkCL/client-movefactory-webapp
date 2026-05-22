@@ -30,7 +30,6 @@ async function logout() {
         <DropdownMenuContent align="end">
             <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Mi Perfil</DropdownMenuItem>
             <DropdownMenuItem @click="logout">Cerrar Sesión</DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>
