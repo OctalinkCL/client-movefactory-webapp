@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/auth";
+import { homeForRole } from "@/router/role-homes";
 import { User } from '@lucide/vue';
 
 const router = useRouter();
@@ -19,7 +20,7 @@ async function handleLogin() {
   loading.value = true;
   try {
     await authStore.login(email.value, password.value);
-    router.push({ name: "admin-dashboard" });
+    router.push({ name: homeForRole(authStore.role) });
   } catch (e) {
     error.value = "Credenciales incorrectas. Revisá email y contraseña.";
   } finally {
