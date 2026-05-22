@@ -2,16 +2,16 @@
 import { useRouter } from 'vue-router'
 import CreateUser from './components/CreateUser.vue'
 import { useUsers } from './composables/useUsers'
+import EmptyItem from '@/components/shared/EmptyItem.vue'
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const router = useRouter()
 const { users, loading, fetchUsers } = useUsers('user')
@@ -34,13 +34,15 @@ function goToDetail(id: string) {
     </header>
 
 
-    <div v-if="loading" class="text-muted-foreground text-sm">Cargando...</div>
-
-    <div v-else-if="users.length === 0" class="text-muted-foreground text-sm">
-      No hay usuarios registrados.
+    <div v-if="loading" class="grid gap-2">
+      <Skeleton class="h-9" v-for="i in 6" :key="i" />
     </div>
 
-    
+    <div v-else-if="users.length === 0" class="mt-24">
+      <EmptyItem section="users" />
+    </div>
+
+
     <div class="border rounded-lg overflow-hidden" v-else>
       <Table>
         <TableHeader class="bg-slate-50">
