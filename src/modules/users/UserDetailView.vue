@@ -8,7 +8,9 @@ import { supabase } from '@/lib/supabase'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
-import LineChartSample from '@/components/chart/LineChartSample.vue'
+import ChartPeso from '@/components/chart/ChartPeso.vue'
+import ChartCintura from '@/components/chart/ChartCintura.vue'
+import ChartComposicion from '@/components/chart/ChartComposicion.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -170,9 +172,10 @@ async function saveProfile() {
           </Button>
         </div>
 
-        <div class="space-y-1">
-          <p class="text-xs text-muted-foreground">Evolución de peso (kg)</p>
-          <LineChartSample />
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <ChartPeso />
+          <ChartCintura />
+          <ChartComposicion />
         </div>
       </section>
     </template>

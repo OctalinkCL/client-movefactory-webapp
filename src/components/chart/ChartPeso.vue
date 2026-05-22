@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VisXYContainer, VisArea, VisLine, VisAxis } from '@unovis/vue'
+import { VisXYContainer, VisLine, VisAxis } from '@unovis/vue'
 import { ChartContainer } from '@/components/ui/chart'
 import type { ChartConfig } from '@/components/ui/chart'
 
@@ -22,16 +22,18 @@ const xTicks = (_: unknown, i: number) => data[i]?.fecha ?? ''
 </script>
 
 <template>
-  <div class="w-full h-64">
-    <ChartContainer :config="config">
-      <template #default="{ id }">
-        <VisXYContainer :data="data" :id="id">
-          <VisArea :x="x" :y="y" color="#ef4444" opacity="0.2" />
-          <VisLine :x="x" :y="y" color="#ef4444" />
-          <VisAxis type="x" :tickFormat="xTicks" />
-          <VisAxis type="y" />
-        </VisXYContainer>
-      </template>
-    </ChartContainer>
+  <div class="space-y-1">
+    <p class="text-xs text-muted-foreground">Peso (kg)</p>
+    <div class="h-40">
+      <ChartContainer :config="config">
+        <template #default="{ id }">
+          <VisXYContainer :data="data" :id="id">
+            <VisLine :x="x" :y="y" color="#ef4444" />
+            <VisAxis type="x" :tickFormat="xTicks" />
+            <VisAxis type="y" />
+          </VisXYContainer>
+        </template>
+      </ChartContainer>
+    </div>
   </div>
 </template>

@@ -10,6 +10,9 @@ import { Input } from '@/components/ui/input'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
+import ChartPeso from '@/components/chart/ChartPeso.vue'
+import ChartCintura from '@/components/chart/ChartCintura.vue'
+import ChartComposicion from '@/components/chart/ChartComposicion.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -65,40 +68,56 @@ async function submitForm() {
       </div>
     </div>
 
-    <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
-
-    <div class="grid grid-cols-2 gap-4">
-      <LineChartSample />
-      <BarChartSample />
-      <AreaChartSample />
-      <PieChartSample />
+    <!-- Gráficas -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <ChartPeso />
+      <ChartCintura />
+      <ChartComposicion />
     </div>
 
-    <div class="space-y-4">
-      <!-- Session cards -->
-      <div
-        v-for="session in sessions"
-        :key="session.id"
-        class="border rounded-md p-4 space-y-3"
-      >
-        <div class="flex items-center justify-between">
-          <span class="font-medium text-sm">{{ formatDate(session.date) }}</span>
-          <span class="text-xs text-muted-foreground">{{ session.measurements?.length ?? 0 }} métricas</span>
-        </div>
+    <!-- Historial -->
+    <div class="space-y-3">
+      <p class="text-sm font-medium">Historial de sesiones</p>
 
-        <div class="flex flex-wrap gap-2">
-          <span
-            v-for="m in session.measurements"
-            :key="m.id"
-            class="border rounded-full px-2 py-0.5 text-xs"
-          >
-            {{ getMetric(m.metric)?.label ?? m.metric }}
-            <span class="text-muted-foreground">{{ m.value }} {{ getMetric(m.metric)?.unit }}</span>
-          </span>
-        </div>
+      <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
 
-        <p v-if="session.notes" class="text-xs text-muted-foreground italic">{{ session.notes }}</p>
+      <div v-else-if="sessions.length" class="border rounded-md overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b bg-muted/40">
+              <th class="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Fecha</th>
+              <th
+                v-for="metric in METRICS"
+                :key="metric.key"
+                class="text-right px-3 py-2 font-medium text-muted-foreground whitespace-nowrap"
+              >
+                {{ metric.label }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="session in sessions"
+              :key="session.id"
+              class="border-b last:border-0 hover:bg-muted/20 transition-colors"
+            >
+              <td class="px-3 py-2 whitespace-nowrap">{{ formatDate(session.date) }}</td>
+              <td
+                v-for="metric in METRICS"
+                :key="metric.key"
+                class="px-3 py-2 text-right text-muted-foreground whitespace-nowrap"
+              >
+                {{ session.measurements?.find(m => m.metric === metric.key)?.value ?? '—' }}
+                <span v-if="session.measurements?.find(m => m.metric === metric.key)" class="text-xs">
+                  {{ metric.unit }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+
+      <p v-else class="text-sm text-muted-foreground">Sin sesiones registradas.</p>
 
       <!-- New session sheet -->
       <Sheet v-model:open="sheetOpen">
@@ -174,3 +193,4 @@ async function submitForm() {
     </div>
   </div>
 </template>
+
