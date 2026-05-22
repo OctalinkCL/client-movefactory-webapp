@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import AppSidebar from '@/components/layouts/AppSidebar.vue'
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import AppHeader from '@/components/layouts/AppHeader.vue'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 </script>
 
 <template>
   <SidebarProvider>
     <AppSidebar />
-    <main>
-      <SidebarTrigger />
+    <SidebarInset>
+      <AppHeader />
       <router-view />
-    </main>
+    </SidebarInset>
   </SidebarProvider>
 </template>

@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
-import { SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
+import { useSidebar, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
 import { Home, UserKey, Users } from 'lucide-vue-next'
 
 const { role } = storeToRefs(useAuthStore())
+const route = useRoute()
+const router = useRouter()
+const { isMobile, setOpenMobile } = useSidebar()
 
 const itemNav = [
     {
@@ -31,19 +35,23 @@ const itemNav = [
 const filteredNav = computed(() =>
     itemNav.filter(item => item.role.includes(role.value ?? ''))
 )
+
+function handleNavClick(to: string) {
+    router.push({ name: to })
+    if (isMobile.value) setOpenMobile(false)
+}
 </script>
 
 <template>
     <SidebarGroup>
         <SidebarGroupLabel>Bienvenido</SidebarGroupLabel>
         <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu class="gap-1">
                 <SidebarMenuItem v-for="item in filteredNav" :key="item.to">
-                    <SidebarMenuButton as-child>
-                        <router-link :to="{ name: item.to }">
-                            <component :is="item.icon" v-if="item.icon" />
-                            <span>{{ item.name }}</span>
-                        </router-link>
+                    <SidebarMenuButton :is-active="route.name === item.to" @click="handleNavClick(item.to)"
+                        class="cursor-pointer">
+                        <component :is="item.icon" v-if="item.icon" />
+                        <span>{{ item.name }}</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
