@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/types/profile";
+import { getInitials } from "@/lib/utils";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
@@ -17,7 +18,9 @@ export const useAuthStore = defineStore("auth", () => {
       .select("*")
       .eq("id", userId)
       .single();
-    profile.value = data;
+    profile.value = data
+      ? { ...data, initials: getInitials(data.full_name), avatar_url: data.avatar_url ?? null }
+      : null;
   }
 
   async function init() {
