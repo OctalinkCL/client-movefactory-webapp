@@ -10,7 +10,14 @@ export const adminRoutes: RouteRecordRaw[] = [
       {
         path: "dashboard",
         name: "admin-dashboard",
+        meta: { roles: ["admin"] },
         component: () => import("@/modules/dashboard/AdminDashboard.vue"),
+      },
+      {
+        path: "user-dashboard",
+        name: "user-dashboard",
+        meta: { roles: ["user"] },
+        component: () => import("@/modules/dashboard/UserDashboard.vue"),
       },
       {
         path: "staff",

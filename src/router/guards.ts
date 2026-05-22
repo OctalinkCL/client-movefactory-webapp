@@ -1,5 +1,6 @@
 import type { NavigationGuard } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { homeForRole } from "./role-homes";
 
 export const authGuard: NavigationGuard = (to) => {
   const authStore = useAuthStore();
@@ -11,10 +12,9 @@ export const authGuard: NavigationGuard = (to) => {
     return { name: "login" };
   }
   if (to.name === "login" && authStore.isAuthenticated) {
-    return { name: "admin-dashboard" };
+    return { name: homeForRole(authStore.role) };
   }
   if (to.meta.roles && !to.meta.roles.includes(authStore.role!)) {
-    console.debug(to.meta);
-    return { name: "admin-dashboard" };
+    return { name: homeForRole(authStore.role) };
   }
 };

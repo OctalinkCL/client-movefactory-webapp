@@ -16,7 +16,13 @@ const itemNav = [
         name: 'Dashboard',
         to: 'admin-dashboard',
         icon: Home,
-        role: ['admin', 'nutritionist']
+        role: ['admin']
+    },
+    {
+        name: 'Dashboard',
+        to: 'user-dashboard',
+        icon: Home,
+        role: ['user']
     },
     {
         name: 'Staff',
