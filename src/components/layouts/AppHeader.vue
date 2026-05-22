@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { useResponsive } from '@/composables/useResponsive'
 import NavUser from './NavUser.vue'
-
-const { isMobile } = useResponsive()
-console.debug('isMobile', isMobile.value)
 
 const currentDate = new Intl.DateTimeFormat('es-CL', {
     day: 'numeric',
