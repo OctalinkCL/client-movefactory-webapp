@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
+import LineChartSample from '@/components/chart/LineChartSample.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -161,12 +162,18 @@ async function saveProfile() {
       </section>
 
       <!-- Seguimiento -->
-      <section class="border rounded-md p-4 space-y-3">
-        <h2 class="font-medium">Seguimiento</h2>
-        <p class="text-muted-foreground text-sm">Registro de mediciones y evolución del paciente.</p>
-        <Button size="sm" @click="router.push({ name: 'admin-tracking', params: { id: user!.id } })">
-          Ver seguimiento
-        </Button>
+      <section class="border rounded-md p-4 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="font-medium">Seguimiento</h2>
+          <Button size="sm" variant="outline" @click="router.push({ name: 'admin-tracking', params: { id: user!.id } })">
+            Ver todo
+          </Button>
+        </div>
+
+        <div class="space-y-1">
+          <p class="text-xs text-muted-foreground">Evolución de peso (kg)</p>
+          <LineChartSample />
+        </div>
       </section>
     </template>
   </div>

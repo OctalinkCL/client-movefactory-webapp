@@ -10,10 +10,6 @@ import { Input } from '@/components/ui/input'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
-import LineChartSample from '@/components/chart/LineChartSample.vue'
-import BarChartSample from '@/components/chart/BarChartSample.vue'
-import AreaChartSample from '@/components/chart/AreaChartSample.vue'
-import PieChartSample from '@/components/chart/PieChartSample.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -133,7 +129,7 @@ async function submitForm() {
                   :key="metric.key"
                   class="flex items-center gap-3"
                 >
-                  <label class="text-sm w-40 flex-shrink-0">{{ metric.label }}</label>
+                  <label class="text-sm w-40 shrink-0">{{ metric.label }}</label>
                   <div class="flex items-center gap-1.5 flex-1">
                     <Input
                       v-model="form.measurements[metric.key]"
