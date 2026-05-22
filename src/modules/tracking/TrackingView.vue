@@ -10,6 +10,10 @@ import { Input } from '@/components/ui/input'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
+import LineChartSample from '@/components/chart/LineChartSample.vue'
+import BarChartSample from '@/components/chart/BarChartSample.vue'
+import AreaChartSample from '@/components/chart/AreaChartSample.vue'
+import PieChartSample from '@/components/chart/PieChartSample.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -66,6 +70,13 @@ async function submitForm() {
     </div>
 
     <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
+
+    <div class="grid grid-cols-2 gap-4">
+      <LineChartSample />
+      <BarChartSample />
+      <AreaChartSample />
+      <PieChartSample />
+    </div>
 
     <div class="space-y-4">
       <!-- Session cards -->
