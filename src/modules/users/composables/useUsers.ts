@@ -18,6 +18,8 @@ export function useUsers(role: Profile['role']) {
     if (err) error.value = err.message
     else users.value = data ?? []
     loading.value = false
+
+    console.debug(data)
   }
 
   onMounted(fetchUsers)
