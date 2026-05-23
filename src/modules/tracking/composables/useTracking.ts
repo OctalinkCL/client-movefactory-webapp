@@ -15,6 +15,7 @@ export function useTracking() {
       .select('*, measurements:tracking_measurements(*)')
       .eq('user_id', userId)
       .order('date', { ascending: false })
+      .limit(12)
     if (err) error.value = err.message
     else sessions.value = data ?? []
     loading.value = false

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from '@/modules/users/composables/useUser'
 import { useTracking } from './composables/useTracking'
@@ -27,6 +27,25 @@ onMounted(() => fetchSessions(userId))
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
 }
+
+function getMeasurement(session: typeof sessions.value[number] | undefined, metric: string) {
+  return session?.measurements?.find(m => m.metric === metric)?.value ?? null
+}
+
+const chartPesoData = computed(() =>
+  [...sessions.value].reverse()
+    .filter(s => getMeasurement(s, 'weight') !== null)
+    .map(s => ({ fecha: s.date.slice(0, 7), valor: getMeasurement(s, 'weight') as number }))
+)
+
+const chartCinturaData = computed(() =>
+  [...sessions.value].reverse()
+    .filter(s => getMeasurement(s, 'waist') !== null)
+    .map(s => ({ fecha: s.date.slice(0, 7), valor: getMeasurement(s, 'waist') as number }))
+)
+
+const lastFatPct = computed(() => getMeasurement(sessions.value[0], 'fat_pct') ?? undefined)
+const lastMusclePct = computed(() => getMeasurement(sessions.value[0], 'muscle_pct') ?? undefined)
 
 // Sheet form
 const sheetOpen = ref(false)
@@ -70,9 +89,9 @@ async function submitForm() {
 
     <!-- Gráficas -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <ChartPeso />
-      <ChartCintura />
-      <ChartComposicion />
+      <ChartPeso :data="chartPesoData.length ? chartPesoData : undefined" />
+      <ChartCintura :data="chartCinturaData.length ? chartCinturaData : undefined" />
+      <ChartComposicion :fatPct="lastFatPct" :musclePct="lastMusclePct" />
     </div>
 
     <!-- Historial -->

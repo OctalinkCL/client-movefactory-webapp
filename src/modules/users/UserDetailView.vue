@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from './composables/useUser'
+import { useTracking } from '@/modules/tracking/composables/useTracking'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
@@ -16,6 +17,26 @@ const route = useRoute()
 const router = useRouter()
 const userId = route.params.id as string
 const { user, loading, updateProfile } = useUser(userId)
+const { sessions, fetchSessions } = useTracking()
+
+function getMeasurement(session: typeof sessions.value[number] | undefined, metric: string) {
+  return session?.measurements?.find(m => m.metric === metric)?.value ?? null
+}
+
+const chartPesoData = computed(() =>
+  [...sessions.value].reverse()
+    .filter(s => getMeasurement(s, 'weight') !== null)
+    .map(s => ({ fecha: s.date.slice(0, 7), valor: getMeasurement(s, 'weight') as number }))
+)
+
+const chartCinturaData = computed(() =>
+  [...sessions.value].reverse()
+    .filter(s => getMeasurement(s, 'waist') !== null)
+    .map(s => ({ fecha: s.date.slice(0, 7), valor: getMeasurement(s, 'waist') as number }))
+)
+
+const lastFatPct = computed(() => getMeasurement(sessions.value[0], 'fat_pct') ?? undefined)
+const lastMusclePct = computed(() => getMeasurement(sessions.value[0], 'muscle_pct') ?? undefined)
 
 const plan = ref<{ created_at: string; updated_at: string } | null>(null)
 onMounted(async () => {
@@ -25,6 +46,7 @@ onMounted(async () => {
     .eq('user_id', userId)
     .maybeSingle()
   plan.value = data
+  fetchSessions(userId)
 })
 
 function formatDate(iso: string) {
@@ -173,9 +195,9 @@ async function saveProfile() {
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <ChartPeso />
-          <ChartCintura />
-          <ChartComposicion />
+          <ChartPeso :data="chartPesoData.length ? chartPesoData : undefined" />
+          <ChartCintura :data="chartCinturaData.length ? chartCinturaData : undefined" />
+          <ChartComposicion :fatPct="lastFatPct" :musclePct="lastMusclePct" />
         </div>
       </section>
     </template>
