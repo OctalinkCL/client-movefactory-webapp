@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import CreateUser from './components/CreateUser.vue'
 import { useStaff } from './composables/useStaff'
+import { useToggleUser } from './composables/useToggleUser'
+import { useAuthStore } from '@/stores/auth'
 import EmptyItem from '@/components/shared/EmptyItem.vue'
 import { getInitials } from '@/lib/utils'
 import {
@@ -10,13 +12,23 @@ import {
   Avatar, AvatarFallback, AvatarImage,
 } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 
+const authStore = useAuthStore()
 const { users, loading, fetchUsers } = useStaff()
+const { toggleUser, loading: toggling } = useToggleUser()
 
 function roleLabel(role: string) {
   if (role === 'admin') return 'Admin'
   if (role === 'nutritionist') return 'Nutricionista'
   return role
+}
+
+async function handleToggle(userId: string, currentActive: boolean) {
+  const action = currentActive ? 'suspender' : 'reactivar'
+  if (!confirm(`¿Seguro que deseas ${action} este miembro del staff?`)) return
+  await toggleUser(userId, !currentActive)
+  await fetchUsers()
 }
 </script>
 
@@ -46,6 +58,7 @@ function roleLabel(role: string) {
             <TableHead>Email</TableHead>
             <TableHead>Teléfono</TableHead>
             <TableHead>Rol</TableHead>
+            <TableHead class="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -68,6 +81,19 @@ function roleLabel(role: string) {
               >
                 {{ roleLabel(user.role) }}
               </span>
+            </TableCell>
+            <TableCell class="text-right">
+              <Button
+                v-if="user.id !== authStore.profile?.id"
+                size="sm"
+                variant="ghost"
+                class="text-destructive hover:text-destructive"
+                :disabled="toggling"
+                @click="handleToggle(user.id, user.is_active)"
+              >
+                {{ user.is_active ? 'Suspender' : 'Reactivar' }}
+              </Button>
+              <span v-else class="text-xs text-muted-foreground">Tú</span>
             </TableCell>
           </TableRow>
         </TableBody>

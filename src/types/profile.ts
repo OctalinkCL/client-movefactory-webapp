@@ -8,6 +8,7 @@ export interface Profile {
   height: number | null
   role: 'admin' | 'nutritionist' | 'user'
   avatar_url: string | null
+  is_active: boolean
   created_at: string
   initials: string
 }

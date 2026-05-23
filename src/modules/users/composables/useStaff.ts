@@ -14,6 +14,7 @@ export function useStaff() {
       .from('profiles')
       .select('*')
       .in('role', ['admin', 'nutritionist'])
+      .eq('is_active', true)
       .order('full_name')
     if (err) error.value = err.message
     else users.value = data ?? []

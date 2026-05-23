@@ -14,12 +14,11 @@ export function useUsers(role: Profile['role']) {
       .from('profiles')
       .select('*')
       .eq('role', role)
+      .eq('is_active', true)
       .order('full_name')
     if (err) error.value = err.message
     else users.value = data ?? []
     loading.value = false
-
-    console.debug(data)
   }
 
   onMounted(fetchUsers)
