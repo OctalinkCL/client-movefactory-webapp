@@ -7,18 +7,14 @@ export const adminRoutes: RouteRecordRaw[] = [
     component: AdminLayout,
     meta: { requiresAuth: true },
     children: [
+      // Dashboard
       {
         path: "dashboard",
         name: "admin-dashboard",
         meta: { roles: ["admin"] },
         component: () => import("@/modules/dashboard/AdminDashboard.vue"),
       },
-      {
-        path: "user-dashboard",
-        name: "user-dashboard",
-        meta: { roles: ["user"] },
-        component: () => import("@/modules/dashboard/UserDashboard.vue"),
-      },
+      // Staff
       {
         path: "staff",
         name: "admin-staff",

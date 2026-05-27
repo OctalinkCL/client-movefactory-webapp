@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { authRoutes } from "./auth.routes";
 import { adminRoutes } from "./admin.routes";
+import { userRoutes } from "./user.routes";
 import { authGuard } from "./guards";
 
 const router = createRouter({
@@ -12,6 +13,7 @@ const router = createRouter({
     },
     ...authRoutes,
     ...adminRoutes,
+    ...userRoutes,
     {
       path: "/:pathMatch(.*)*",
       name: "not-found",
