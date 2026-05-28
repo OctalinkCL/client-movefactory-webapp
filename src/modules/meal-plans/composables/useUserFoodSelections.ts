@@ -40,5 +40,33 @@ export function useUserFoodSelections() {
     return true
   }
 
-  return { selections, fetchForDay, getSelection, saveSelection }
+  async function copySelectionsForMoment(
+    userId: string,
+    itemIds: string[],
+    sourceSelections: UserFoodSelection[],
+    targetDays: number[]
+  ) {
+    if (!sourceSelections.length || !targetDays.length || !itemIds.length) return false
+
+    await supabase
+      .from('user_food_selections')
+      .delete()
+      .eq('user_id', userId)
+      .in('meal_plan_item_id', itemIds)
+      .in('day_of_week', targetDays)
+
+    const records = targetDays.flatMap(day =>
+      sourceSelections.map(s => ({
+        user_id: userId,
+        meal_plan_item_id: s.meal_plan_item_id,
+        food_id: s.food_id,
+        day_of_week: day,
+      }))
+    )
+
+    const { error } = await supabase.from('user_food_selections').insert(records)
+    return !error
+  }
+
+  return { selections, fetchForDay, getSelection, saveSelection, copySelectionsForMoment }
 }

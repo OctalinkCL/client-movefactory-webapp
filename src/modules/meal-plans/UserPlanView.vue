@@ -6,12 +6,14 @@ import { useMealPlan } from './composables/useMealPlan'
 import { useUserFoodSelections } from './composables/useUserFoodSelections'
 import { Skeleton } from '@/components/ui/skeleton'
 import FoodPickerDrawer from './components/FoodPickerDrawer.vue'
+import RepeatMomentDrawer from './components/RepeatMomentDrawer.vue'
 import type { MealPlanMoment } from '@/types/meal-plan'
 import type { Food } from '@/types/food'
+import type { UserFoodSelection } from '@/types/food-selection'
 
 const { profile } = storeToRefs(useAuthStore())
 const { plan, loading, fetchPlan } = useMealPlan()
-const { fetchForDay, getSelection, saveSelection } = useUserFoodSelections()
+const { fetchForDay, getSelection, saveSelection, copySelectionsForMoment } = useUserFoodSelections()
 
 onMounted(() => {
   if (profile.value) fetchPlan(profile.value.id)
@@ -71,6 +73,18 @@ function momentIcon(m: MealPlanMoment): string {
 async function handleSelect(mealPlanItemId: string, food: Food) {
   if (!profile.value) return
   await saveSelection(profile.value.id, mealPlanItemId, food.id, selectedDay.value)
+}
+
+function getSelectionsForMoment(moment: MealPlanMoment): UserFoodSelection[] {
+  return (moment.meal_plan_items ?? [])
+    .map(i => getSelection(i.id))
+    .filter(Boolean) as UserFoodSelection[]
+}
+
+async function handleCopy(moment: MealPlanMoment, targetDays: number[]) {
+  if (!profile.value) return
+  const itemIds = (moment.meal_plan_items ?? []).map(i => i.id)
+  await copySelectionsForMoment(profile.value.id, itemIds, getSelectionsForMoment(moment), targetDays)
 }
 
 function momentIsComplete(moment: MealPlanMoment): boolean {
@@ -146,12 +160,21 @@ function momentIsComplete(moment: MealPlanMoment): boolean {
                 {{ (moment.meal_plan_items?.length ?? 0) === 1 ? 'tipo' : 'tipos' }}
               </p>
             </div>
-            <span
-              class="text-xs font-medium shrink-0"
-              :class="momentIsComplete(moment) ? 'text-green-600' : 'text-muted-foreground'"
-            >
-              {{ momentIsComplete(moment) ? 'Listo' : 'Pendiente' }}
-            </span>
+            <div class="flex items-center gap-2 shrink-0">
+              <RepeatMomentDrawer
+                :moment-name="momentName(moment)"
+                :moment-days="moment.days"
+                :current-day="selectedDay"
+                :disabled="!momentIsComplete(moment)"
+                @copy="(days) => handleCopy(moment, days)"
+              />
+              <span
+                class="text-xs font-medium"
+                :class="momentIsComplete(moment) ? 'text-green-600' : 'text-muted-foreground'"
+              >
+                {{ momentIsComplete(moment) ? 'Listo' : 'Pendiente' }}
+              </span>
+            </div>
           </div>
 
           <!-- Ítems -->
