@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useMealPlan } from './composables/useMealPlan'
@@ -13,10 +13,12 @@ import type { UserFoodSelection } from '@/types/food-selection'
 
 const { profile } = storeToRefs(useAuthStore())
 const { plan, loading, fetchPlan } = useMealPlan()
-const { fetchForDay, getSelection, saveSelection, copySelectionsForMoment } = useUserFoodSelections()
+const { fetchAll, getSelection, saveSelection, copySelectionsForMoment } = useUserFoodSelections()
 
 onMounted(() => {
-  if (profile.value) fetchPlan(profile.value.id)
+  if (!profile.value) return
+  fetchPlan(profile.value.id)
+  fetchAll(profile.value.id)
 })
 
 const DAYS = [
@@ -45,10 +47,6 @@ function todayDayNumber(): number {
 
 const selectedDay = ref(todayDayNumber())
 
-watch(selectedDay, (day) => {
-  if (profile.value) fetchForDay(profile.value.id, day)
-}, { immediate: true })
-
 const coveredDays = computed(() => {
   const days = new Set<number>()
   plan.value?.meal_plan_moments?.forEach(m => m.days.forEach(d => days.add(d)))
@@ -62,6 +60,15 @@ const momentsForDay = computed(() => {
     .sort((a, b) => (a.moment?.sort_order ?? 0) - (b.moment?.sort_order ?? 0))
 })
 
+function dayIsComplete(dayN: number): boolean {
+  if (!coveredDays.value.has(dayN)) return false
+  const moments = plan.value?.meal_plan_moments?.filter(m => m.days.includes(dayN)) ?? []
+  return moments.length > 0 && moments.every(m => {
+    const required = (m.meal_plan_items ?? []).filter(i => i.portion !== null)
+    return required.length > 0 && required.every(i => getSelection(i.id, dayN) !== null)
+  })
+}
+
 function momentName(m: MealPlanMoment): string {
   return m.name || m.moment?.name || 'Momento'
 }
@@ -70,27 +77,27 @@ function momentIcon(m: MealPlanMoment): string {
   return MOMENT_ICONS[momentName(m)] ?? '🍽️'
 }
 
-async function handleSelect(mealPlanItemId: string, food: Food) {
-  if (!profile.value) return
-  await saveSelection(profile.value.id, mealPlanItemId, food.id, selectedDay.value)
+function momentIsComplete(moment: MealPlanMoment): boolean {
+  const required = (moment.meal_plan_items ?? []).filter(i => i.portion !== null)
+  if (!required.length) return true
+  return required.every(i => getSelection(i.id, selectedDay.value) !== null)
 }
 
 function getSelectionsForMoment(moment: MealPlanMoment): UserFoodSelection[] {
   return (moment.meal_plan_items ?? [])
-    .map(i => getSelection(i.id))
+    .map(i => getSelection(i.id, selectedDay.value))
     .filter(Boolean) as UserFoodSelection[]
+}
+
+async function handleSelect(mealPlanItemId: string, food: Food) {
+  if (!profile.value) return
+  await saveSelection(profile.value.id, mealPlanItemId, food.id, selectedDay.value)
 }
 
 async function handleCopy(moment: MealPlanMoment, targetDays: number[]) {
   if (!profile.value) return
   const itemIds = (moment.meal_plan_items ?? []).map(i => i.id)
   await copySelectionsForMoment(profile.value.id, itemIds, getSelectionsForMoment(moment), targetDays)
-}
-
-function momentIsComplete(moment: MealPlanMoment): boolean {
-  const required = (moment.meal_plan_items ?? []).filter(i => i.portion !== null)
-  if (!required.length) return true
-  return required.every(i => getSelection(i.id) !== null)
 }
 </script>
 
@@ -106,10 +113,7 @@ function momentIsComplete(moment: MealPlanMoment): boolean {
       <Skeleton class="h-28 rounded-xl" v-for="i in 4" :key="i" />
     </div>
 
-    <div
-      v-else-if="!plan"
-      class="border rounded-xl p-10 text-center grid gap-1"
-    >
+    <div v-else-if="!plan" class="border rounded-xl p-10 text-center grid gap-1">
       <p class="font-medium">Aún no tienes un plan asignado</p>
       <p class="text-sm text-muted-foreground">Tu nutricionista configurará tu plan pronto.</p>
     </div>
@@ -125,9 +129,11 @@ function momentIsComplete(moment: MealPlanMoment): boolean {
             class="flex-1 h-10 rounded-lg text-sm font-medium transition-colors"
             :class="selectedDay === day.n
               ? 'bg-foreground text-background'
-              : coveredDays.has(day.n)
-                ? 'bg-muted text-foreground hover:bg-muted/70'
-                : 'text-muted-foreground hover:bg-muted/50'"
+              : dayIsComplete(day.n)
+                ? 'bg-green-500 text-white hover:bg-green-600'
+                : coveredDays.has(day.n)
+                  ? 'bg-muted text-foreground hover:bg-muted/70'
+                  : 'text-muted-foreground hover:bg-muted/50'"
           >{{ day.short }}</button>
         </div>
         <p class="text-sm text-muted-foreground px-1">
@@ -136,20 +142,14 @@ function momentIsComplete(moment: MealPlanMoment): boolean {
       </div>
 
       <!-- Sin momentos en el día -->
-      <div
-        v-if="momentsForDay.length === 0"
-        class="border rounded-xl p-8 text-center text-muted-foreground"
-      >
+      <div v-if="momentsForDay.length === 0" class="border rounded-xl p-8 text-center text-muted-foreground">
         <p class="text-sm">Sin momentos para este día.</p>
       </div>
 
       <!-- Momentos del día -->
       <div v-else class="grid gap-3">
-        <div
-          v-for="moment in momentsForDay"
-          :key="moment.id"
-          class="border rounded-xl overflow-hidden"
-        >
+        <div v-for="moment in momentsForDay" :key="moment.id" class="border rounded-xl overflow-hidden">
+
           <!-- Header del momento -->
           <div class="flex items-center gap-3 p-4">
             <span class="text-2xl leading-none">{{ momentIcon(moment) }}</span>
@@ -194,7 +194,7 @@ function momentIsComplete(moment: MealPlanMoment): boolean {
                 v-else
                 :food-type="item.food_type"
                 :portion="item.portion"
-                :selection="getSelection(item.id)"
+                :selection="getSelection(item.id, selectedDay)"
                 @select="(food) => handleSelect(item.id, food)"
               />
             </div>
