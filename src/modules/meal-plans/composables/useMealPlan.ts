@@ -143,5 +143,17 @@ export function useMealPlan() {
     if (idx !== -1) plan.value!.meal_plan_moments![idx] = updated
   }
 
-  return { plan, loading, error, fetchOrCreatePlan, createMoment, updateMoment, removeMoment, removeItem }
+  async function fetchPlan(userId: string) {
+    loading.value = true
+    error.value = null
+    const { data } = await supabase
+      .from('meal_plans')
+      .select(PLAN_SELECT)
+      .eq('user_id', userId)
+      .maybeSingle()
+    plan.value = data
+    loading.value = false
+  }
+
+  return { plan, loading, error, fetchPlan, fetchOrCreatePlan, createMoment, updateMoment, removeMoment, removeItem }
 }

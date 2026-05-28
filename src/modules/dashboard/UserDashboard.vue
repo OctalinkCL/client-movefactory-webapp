@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import PlanSummary from './components/PlanSummary.vue'
+import ProgressSummary from './components/ProgressSummary.vue'
 
 const { profile } = storeToRefs(useAuthStore())
 
@@ -25,6 +26,7 @@ const { profile } = storeToRefs(useAuthStore())
     <!-- Content -->
     <div>
       <PlanSummary v-if="profile" :userId="profile.id" />
+      <ProgressSummary v-if="profile" :userId="profile.id" />
     </div>
 
   </div>
