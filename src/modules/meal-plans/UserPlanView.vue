@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useMealPlan } from './composables/useMealPlan'
@@ -11,6 +12,7 @@ import type { MealPlanMoment } from '@/types/meal-plan'
 import type { Food } from '@/types/food'
 import type { UserFoodSelection } from '@/types/food-selection'
 
+const router = useRouter()
 const { profile } = storeToRefs(useAuthStore())
 const { plan, loading, fetchPlan } = useMealPlan()
 const { fetchAll, getSelection, saveSelection, copySelectionsForMoment } = useUserFoodSelections()
@@ -94,6 +96,11 @@ async function handleSelect(mealPlanItemId: string, food: Food) {
   await saveSelection(profile.value.id, mealPlanItemId, food.id, selectedDay.value)
 }
 
+const allDaysComplete = computed(() => {
+  if (!coveredDays.value.size) return false
+  return [...coveredDays.value].every(d => dayIsComplete(d))
+})
+
 async function handleCopy(moment: MealPlanMoment, targetDays: number[]) {
   if (!profile.value) return
   const itemIds = (moment.meal_plan_items ?? []).map(i => i.id)
@@ -119,6 +126,15 @@ async function handleCopy(moment: MealPlanMoment, targetDays: number[]) {
     </div>
 
     <template v-else>
+      <!-- Botón lista de compras -->
+      <button
+        v-if="allDaysComplete"
+        @click="router.push({ name: 'user-shopping' })"
+        class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-foreground text-background text-sm font-medium transition-colors hover:bg-foreground/90"
+      >
+        🛒 Lista de compras
+      </button>
+
       <!-- Selector de días -->
       <div class="border rounded-xl p-3 grid gap-2">
         <div class="flex gap-1">
