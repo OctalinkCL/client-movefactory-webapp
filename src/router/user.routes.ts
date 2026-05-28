@@ -19,6 +19,12 @@ export const userRoutes: RouteRecordRaw[] = [
         meta: { roles: ["user"] },
         component: () => import("@/modules/meal-plans/UserPlanView.vue"),
       },
+      {
+        path: "profile",
+        name: "user-profile",
+        meta: { roles: ["user"] },
+        component: () => import("@/modules/profile/ProfileView.vue"),
+      },
     ],
   },
 ];
