@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { useAuthStore } from '@/stores/auth';
-// Components
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar'
+import { useAuthStore } from '@/stores/auth'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import PlanSummary from './components/PlanSummary.vue'
 
-const { profile } = storeToRefs(useAuthStore());
+const { profile } = storeToRefs(useAuthStore())
 
 
 </script>
@@ -28,7 +24,7 @@ const { profile } = storeToRefs(useAuthStore());
 
     <!-- Content -->
     <div>
-      Content_
+      <PlanSummary v-if="profile" :userId="profile.id" />
     </div>
 
   </div>
