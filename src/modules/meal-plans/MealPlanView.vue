@@ -172,7 +172,7 @@ async function submitForm() {
               </p>
             </div>
             <!-- Day indicators -->
-            <div class="flex gap-1 flex-shrink-0">
+            <div class="flex gap-1 shrink-0">
               <span
                 v-for="(label, di) in DAY_LABELS"
                 :key="di"
