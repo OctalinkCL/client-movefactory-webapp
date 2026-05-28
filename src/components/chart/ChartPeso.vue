@@ -6,16 +6,7 @@ import type { ChartConfig } from '@/components/ui/chart'
 
 interface DataPoint { fecha: string; valor: number }
 
-const props = withDefaults(defineProps<{ data?: DataPoint[] }>(), {
-  data: () => [
-    { fecha: '2025-01', valor: 72.5 },
-    { fecha: '2025-02', valor: 71.0 },
-    { fecha: '2025-03', valor: 69.8 },
-    { fecha: '2025-04', valor: 70.3 },
-    { fecha: '2025-05', valor: 68.5 },
-    { fecha: '2025-06', valor: 67.2 },
-  ],
-})
+const props = defineProps<{ data?: DataPoint[] }>()
 
 const config: ChartConfig = {
   valor: { label: 'Peso (kg)', color: '#ef4444' },
@@ -23,22 +14,27 @@ const config: ChartConfig = {
 
 const x = (_: unknown, i: number) => i
 const y = (d: DataPoint) => d.valor
-const xTicks = (_: unknown, i: number) => props.data[i]?.fecha ?? ''
+const xTicks = (_: unknown, i: number) => props.data?.[i]?.fecha ?? ''
 </script>
 
 <template>
   <div class="space-y-1">
     <p class="text-xs text-muted-foreground">Peso (kg)</p>
     <div class="h-40">
-      <ChartContainer :config="config">
-        <template #default="{ id }">
-          <VisXYContainer :data="props.data" :id="id">
-            <VisLine :x="x" :y="y" color="#ef4444" />
-            <VisAxis type="x" :tickFormat="xTicks" />
-            <VisAxis type="y" />
-          </VisXYContainer>
-        </template>
-      </ChartContainer>
+      <template v-if="props.data?.length">
+        <ChartContainer :config="config">
+          <template #default="{ id }">
+            <VisXYContainer :data="props.data" :id="id">
+              <VisLine :x="x" :y="y" color="#ef4444" />
+              <VisAxis type="x" :tickFormat="xTicks" />
+              <VisAxis type="y" />
+            </VisXYContainer>
+          </template>
+        </ChartContainer>
+      </template>
+      <div v-else class="h-full flex items-center justify-center">
+        <p class="text-xs text-muted-foreground">Aún no hay registros</p>
+      </div>
     </div>
   </div>
 </template>
