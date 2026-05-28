@@ -72,6 +72,12 @@ async function handleSelect(mealPlanItemId: string, food: Food) {
   if (!profile.value) return
   await saveSelection(profile.value.id, mealPlanItemId, food.id, selectedDay.value)
 }
+
+function momentIsComplete(moment: MealPlanMoment): boolean {
+  const required = (moment.meal_plan_items ?? []).filter(i => i.portion !== null)
+  if (!required.length) return true
+  return required.every(i => getSelection(i.id) !== null)
+}
 </script>
 
 <template>
@@ -140,6 +146,12 @@ async function handleSelect(mealPlanItemId: string, food: Food) {
                 {{ (moment.meal_plan_items?.length ?? 0) === 1 ? 'tipo' : 'tipos' }}
               </p>
             </div>
+            <span
+              class="text-xs font-medium shrink-0"
+              :class="momentIsComplete(moment) ? 'text-green-600' : 'text-muted-foreground'"
+            >
+              {{ momentIsComplete(moment) ? 'Listo' : 'Pendiente' }}
+            </span>
           </div>
 
           <!-- Ítems -->

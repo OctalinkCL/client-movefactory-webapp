@@ -70,7 +70,7 @@ function select(food: Food) {
       </button>
     </DrawerTrigger>
 
-    <DrawerContent class="max-h-[82vh] flex flex-col">
+    <DrawerContent class="h-[82vh] flex flex-col">
       <DrawerHeader class="pb-3">
         <DrawerTitle>Elegir {{ foodType.toLowerCase() }}</DrawerTitle>
         <p class="text-sm text-muted-foreground">{{ portion }} · selecciona 1 alimento</p>
