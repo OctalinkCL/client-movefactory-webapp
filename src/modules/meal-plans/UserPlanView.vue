@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useMealPlan } from './composables/useMealPlan'
+import { useUserFoodSelections } from './composables/useUserFoodSelections'
 import { Skeleton } from '@/components/ui/skeleton'
+import FoodPickerDrawer from './components/FoodPickerDrawer.vue'
 import type { MealPlanMoment } from '@/types/meal-plan'
+import type { Food } from '@/types/food'
 
 const { profile } = storeToRefs(useAuthStore())
 const { plan, loading, fetchPlan } = useMealPlan()
+const { fetchForDay, getSelection, saveSelection } = useUserFoodSelections()
 
 onMounted(() => {
   if (profile.value) fetchPlan(profile.value.id)
@@ -39,6 +43,10 @@ function todayDayNumber(): number {
 
 const selectedDay = ref(todayDayNumber())
 
+watch(selectedDay, (day) => {
+  if (profile.value) fetchForDay(profile.value.id, day)
+}, { immediate: true })
+
 const coveredDays = computed(() => {
   const days = new Set<number>()
   plan.value?.meal_plan_moments?.forEach(m => m.days.forEach(d => days.add(d)))
@@ -58,6 +66,11 @@ function momentName(m: MealPlanMoment): string {
 
 function momentIcon(m: MealPlanMoment): string {
   return MOMENT_ICONS[momentName(m)] ?? '🍽️'
+}
+
+async function handleSelect(mealPlanItemId: string, food: Food) {
+  if (!profile.value) return
+  await saveSelection(profile.value.id, mealPlanItemId, food.id, selectedDay.value)
 }
 </script>
 
@@ -129,17 +142,26 @@ function momentIcon(m: MealPlanMoment): string {
             </div>
           </div>
 
-          <!-- Ítems del momento -->
+          <!-- Ítems -->
           <div v-if="moment.meal_plan_items?.length" class="border-t divide-y">
             <div
               v-for="item in moment.meal_plan_items"
               :key="item.id"
-              class="flex items-center justify-between px-4 py-3"
+              class="flex items-center justify-between px-4 py-3 gap-4"
             >
-              <p class="text-sm font-medium">{{ item.food_type }}</p>
-              <p class="text-sm text-muted-foreground">
-                {{ item.portion ?? 'Libre elección' }}
-              </p>
+              <div class="min-w-0">
+                <p class="text-sm font-medium">{{ item.food_type }}</p>
+                <p class="text-xs text-muted-foreground">{{ item.portion ?? 'Libre elección' }}</p>
+              </div>
+
+              <span v-if="!item.portion" class="text-xs text-muted-foreground shrink-0">Libre</span>
+              <FoodPickerDrawer
+                v-else
+                :food-type="item.food_type"
+                :portion="item.portion"
+                :selection="getSelection(item.id)"
+                @select="(food) => handleSelect(item.id, food)"
+              />
             </div>
           </div>
 
