@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
 } from '@/components/ui/sheet'
 
 const { foods, categories, loading, fetchFoods, fetchCategories, createFood, updateFood } = useFoods()
