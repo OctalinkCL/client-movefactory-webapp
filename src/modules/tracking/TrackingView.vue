@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUser } from '@/modules/users/composables/useUser'
 import { useTracking } from './composables/useTracking'
 import { useAuthStore } from '@/stores/auth'
-import { METRICS, getMetric } from './constants'
+import { METRICS } from './constants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
