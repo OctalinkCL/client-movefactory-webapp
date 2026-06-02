@@ -10,7 +10,6 @@ const { sessions, fetchSessions } = useTracking()
 
 onMounted(async () => {
   await fetchSessions(props.userId)
-  console.log('sessions:', sessions.value)
 })
 
 function getMeasurement(session: typeof sessions.value[number], metric: string) {
