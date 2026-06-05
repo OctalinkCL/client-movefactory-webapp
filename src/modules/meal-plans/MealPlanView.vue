@@ -221,7 +221,7 @@ async function submitForm() {
             <SheetTitle>{{ isEditing ? 'Editar momento' : 'Nuevo momento' }}</SheetTitle>
           </SheetHeader>
 
-          <div class="space-y-5 py-2">
+          <div class="space-y-5 py-2 flex-1 overflow-y-auto">
             <!-- Nombre -->
             <div class="space-y-1.5">
               <label class="text-sm font-medium">Nombre</label>

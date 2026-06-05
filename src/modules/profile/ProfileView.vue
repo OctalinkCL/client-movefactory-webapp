@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
+import { formatDate } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { LogOut } from 'lucide-vue-next'
@@ -13,11 +14,9 @@ const router = useRouter()
 
 const SEX_LABELS: Record<string, string> = { male: 'Masculino', female: 'Femenino' }
 
-const birthDateFormatted = computed(() => {
-  if (!profile.value?.birth_date) return null
-  const [y, m, d] = profile.value.birth_date.split('-')
-  return `${d}/${m}/${y}`
-})
+const birthDateFormatted = computed(() =>
+  profile.value?.birth_date ? formatDate(profile.value.birth_date) : null
+)
 
 async function handleLogout() {
   await authStore.logout()
