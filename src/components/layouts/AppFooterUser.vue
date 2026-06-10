@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { Home, UtensilsCrossed, UserRound } from 'lucide-vue-next'
+import { Home, UtensilsCrossed, UserRound, FileText } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -8,6 +8,7 @@ const router = useRouter()
 const navItems = [
   { name: 'Inicio', to: 'user-dashboard', icon: Home },
   { name: 'Mi plan', to: 'user-plan', icon: UtensilsCrossed },
+  { name: 'Documentos', to: 'user-documents', icon: FileText },
   { name: 'Perfil', to: 'user-profile', icon: UserRound },
 ]
 </script>

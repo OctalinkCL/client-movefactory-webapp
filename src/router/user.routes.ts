@@ -31,6 +31,12 @@ export const userRoutes: RouteRecordRaw[] = [
         meta: { roles: ["user"] },
         component: () => import("@/modules/meal-plans/UserShoppingView.vue"),
       },
+      {
+        path: "documents",
+        name: "user-documents",
+        meta: { roles: ["user"] },
+        component: () => import("@/modules/documents/UserDocumentsView.vue"),
+      },
     ],
   },
 ];
