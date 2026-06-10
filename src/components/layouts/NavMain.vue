@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useSidebar, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
-import { Home, UserKey, Users, Apple } from 'lucide-vue-next'
+import { Home, UserKey, Users, Apple, FileText } from 'lucide-vue-next'
 
 const { role } = storeToRefs(useAuthStore())
 const route = useRoute()
@@ -41,6 +41,12 @@ const itemNav = [
         to: 'admin-foods',
         icon: Apple,
         role: ['admin']
+    },
+    {
+        name: 'Documentos',
+        to: 'admin-documents',
+        icon: FileText,
+        role: ['admin', 'nutritionist']
     },
 ]
 

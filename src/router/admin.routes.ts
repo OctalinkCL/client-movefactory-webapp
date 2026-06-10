@@ -48,6 +48,13 @@ export const adminRoutes: RouteRecordRaw[] = [
         meta: { roles: ["admin"] },
         component: () => import("@/modules/foods/FoodsView.vue"),
       },
+      // Documents
+      {
+        path: "documents",
+        name: "admin-documents",
+        meta: { roles: ["admin", "nutritionist"] },
+        component: () => import("@/modules/documents/DocumentsView.vue"),
+      },
       // Tracking
       {
         path: "users/:id/tracking",
