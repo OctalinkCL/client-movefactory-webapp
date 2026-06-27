@@ -47,15 +47,10 @@ async function submit() {
       <DialogHeader>
         <DialogTitle>Nuevo {{ label }}</DialogTitle>
       </DialogHeader>
-      <form @submit.prevent="submit" class="flex flex-col gap-4 py-4">
+      <form @submit.prevent="submit" class="flex flex-col gap-4 pt-4">
         <Input v-model="form.full_name" placeholder="Nombre completo" />
         <Input v-model="form.email" type="email" placeholder="Email" />
-        <Input
-          v-model="form.password"
-          type="password"
-          placeholder="Contraseña temporal"
-          autocomplete="off"
-        />
+        <Input v-model="form.password" type="password" placeholder="Contraseña temporal" autocomplete="off" />
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
         <DialogFooter>
           <Button type="submit" :disabled="loading">

@@ -27,12 +27,12 @@ async function logout() {
                 <AvatarImage :src="auth.profile?.avatar_url" v-if="auth.profile?.avatar_url" />
                 <AvatarFallback class="text-xs font-medium" v-else>{{ auth.profile?.initials }}</AvatarFallback>
             </Avatar>
-            <div class="grid text-left text-sm leading-tight">
+            <div class="hidden sm:grid text-left text-sm leading-tight">
                 <span class="truncate font-medium">{{ auth.profile?.full_name }}</span>
                 <span class="text-muted-foreground truncate text-xs">{{ auth.profile?.role }}</span>
             </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" class="mt-1">
             <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem @click="logout">Cerrar Sesión</DropdownMenuItem>

@@ -67,7 +67,7 @@ function handleNavClick(to: string) {
             <SidebarMenu class="gap-1">
                 <SidebarMenuItem v-for="item in filteredNav" :key="item.to">
                     <SidebarMenuButton :is-active="route.name === item.to" @click="handleNavClick(item.to)"
-                        class="cursor-pointer">
+                        class="cursor-pointer h-9 data-[active=true]:bg-black data-[active=true]:text-white">
                         <component :is="item.icon" v-if="item.icon" />
                         <span>{{ item.name }}</span>
                     </SidebarMenuButton>
