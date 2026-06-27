@@ -3,7 +3,7 @@ import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from '@/compone
 
 import NavHeader from '@/components/layouts/NavHeader.vue'
 import NavMain from '@/components/layouts/NavMain.vue'
-import NavFooter from '@/components/layouts/NavFooter.vue'
+// import NavFooter from '@/components/layouts/NavFooter.vue'
 </script>
 
 <template>
@@ -17,8 +17,8 @@ import NavFooter from '@/components/layouts/NavFooter.vue'
             <NavMain />
         </SidebarContent>
         <!-- Fotoer -->
-        <SidebarFooter>
+        <!-- <SidebarFooter>
             <NavFooter />
-        </SidebarFooter>
+        </SidebarFooter> -->
     </Sidebar>
 </template>
