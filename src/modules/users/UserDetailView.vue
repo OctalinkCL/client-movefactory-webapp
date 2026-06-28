@@ -3,7 +3,7 @@ import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from './composables/useUser'
 import { useTracking } from '@/modules/tracking/composables/useTracking'
-import { Button } from '@/components/ui/button'
+
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import {
@@ -12,6 +12,12 @@ import {
 import ChartPeso from '@/components/chart/ChartPeso.vue'
 import ChartCintura from '@/components/chart/ChartCintura.vue'
 import ChartComposicion from '@/components/chart/ChartComposicion.vue'
+
+// icons
+import { ArrowLeft } from 'lucide-vue-next'
+
+// ui_components
+import { Button } from '@/components/ui/button'
 
 const route = useRoute()
 const router = useRouter()
@@ -90,13 +96,14 @@ async function saveProfile() {
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
-    <button
-      class="text-sm text-muted-foreground hover:underline"
-      @click="router.back()"
-    >
-      ← Volver
+  <div id="user-detail-view">
+
+    <!-- button_back -->
+    <button class="text-sm text-muted-foreground flex items-center gap-2 cursor-pointer" @click="router.back()">
+      <ArrowLeft :size="15" />
+      Volver al Directorio de usuario
     </button>
+
 
     <div v-if="loading" class="text-muted-foreground text-sm">Cargando...</div>
 
@@ -189,7 +196,8 @@ async function saveProfile() {
       <section class="border rounded-md p-4 space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="font-medium">Seguimiento</h2>
-          <Button size="sm" variant="outline" @click="router.push({ name: 'admin-tracking', params: { id: user!.id } })">
+          <Button size="sm" variant="outline"
+            @click="router.push({ name: 'admin-tracking', params: { id: user!.id } })">
             Ver todo
           </Button>
         </div>
