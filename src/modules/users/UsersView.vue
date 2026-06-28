@@ -71,19 +71,11 @@ async function handleToggle(userId: string, currentActive: boolean) {
             <TableCell>{{ user.phone ?? '—' }}</TableCell>
             <TableCell class="text-right">
               <div class="flex items-center justify-end gap-3">
-                <span
-                  class="text-sm hover:underline cursor-pointer"
-                  @click="goToDetail(user.id)"
-                >
+                <span class="text-sm hover:underline cursor-pointer" @click="goToDetail(user.id)">
                   Ver usuario
                 </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  class="text-destructive hover:text-destructive"
-                  :disabled="toggling"
-                  @click="handleToggle(user.id, user.is_active)"
-                >
+                <Button size="sm" variant="ghost" class="text-destructive hover:text-destructive" :disabled="toggling"
+                  @click="handleToggle(user.id, user.is_active)">
                   {{ user.is_active ? 'Suspender' : 'Reactivar' }}
                 </Button>
               </div>
