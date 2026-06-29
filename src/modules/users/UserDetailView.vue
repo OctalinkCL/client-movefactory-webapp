@@ -19,6 +19,9 @@ import { ArrowLeft } from 'lucide-vue-next'
 // ui_components
 import { Button } from '@/components/ui/button'
 
+// components
+import UserProfile from '@/components/shared/UserProfile.vue'
+
 const route = useRoute()
 const router = useRouter()
 const userId = route.params.id as string
@@ -96,7 +99,7 @@ async function saveProfile() {
 </script>
 
 <template>
-  <div id="user-detail-view">
+  <div id="user-detail-view" class="space-y-4">
 
     <!-- button_back -->
     <button class="text-sm text-muted-foreground flex items-center gap-2 cursor-pointer" @click="router.back()">
@@ -104,42 +107,16 @@ async function saveProfile() {
       Volver al Directorio de usuario
     </button>
 
+    <!-- main -->
+    <div class="grid gap-4 lg:grid-cols-7">
+      <!-- aside -->
+      <aside class="lg:col-span-2 space-y-3">
+        <UserProfile :user="user" />
 
-    <div v-if="loading" class="text-muted-foreground text-sm">Cargando...</div>
-
-    <template v-else-if="user">
-      <div class="space-y-1">
-        <h1 class="text-2xl font-semibold">{{ user.full_name }}</h1>
-        <p class="text-muted-foreground text-sm capitalize">{{ user.role }}</p>
-      </div>
-
-      <!-- Datos del paciente -->
-      <section class="border rounded-md p-4 space-y-3">
-        <h2 class="font-medium">Datos del paciente</h2>
-        <template v-if="hasFixedData()">
-          <div class="grid grid-cols-2 gap-3">
-            <div v-if="user.birth_date" class="space-y-0.5">
-              <p class="text-xs text-muted-foreground">Fecha de nacimiento</p>
-              <p class="text-sm">{{ formatDate(user.birth_date) }}</p>
-            </div>
-            <div v-if="user.sex" class="space-y-0.5">
-              <p class="text-xs text-muted-foreground">Sexo</p>
-              <p class="text-sm">{{ sexLabel(user.sex) }}</p>
-            </div>
-            <div v-if="user.height" class="space-y-0.5">
-              <p class="text-xs text-muted-foreground">Estatura</p>
-              <p class="text-sm">{{ user.height }} cm</p>
-            </div>
-            <div v-if="user.phone" class="space-y-0.5">
-              <p class="text-xs text-muted-foreground">Teléfono</p>
-              <p class="text-sm">{{ user.phone }}</p>
-            </div>
-          </div>
-        </template>
-        <p v-else class="text-muted-foreground text-sm">Sin datos registrados.</p>
+        <!-- edit -->
         <Sheet v-model:open="profileSheetOpen">
           <SheetTrigger as-child>
-            <Button size="sm" variant="outline" @click="openProfileSheet">
+            <Button class="w-full" @click="openProfileSheet">
               {{ hasFixedData() ? 'Editar datos' : 'Completar datos' }}
             </Button>
           </SheetTrigger>
@@ -175,39 +152,81 @@ async function saveProfile() {
             </SheetFooter>
           </SheetContent>
         </Sheet>
-      </section>
+      </aside>
 
-      <!-- Plan de alimentación -->
-      <section class="border rounded-md p-4 space-y-3">
-        <h2 class="font-medium">Plan de alimentación</h2>
-        <template v-if="plan">
+      <!-- content -->
+      <div class="lg:col-span-5">
+        <div v-if="loading" class="text-muted-foreground text-sm">Cargando...</div>
+
+        <template v-else-if="user">
           <div class="space-y-1">
-            <p class="text-xs text-muted-foreground">Creado: {{ formatDate(plan.created_at) }}</p>
-            <p class="text-xs text-muted-foreground">Última actualización: {{ formatDate(plan.updated_at) }}</p>
+            <h1 class="text-2xl font-semibold">{{ user.full_name }}</h1>
+            <p class="text-muted-foreground text-sm capitalize">{{ user.role }}</p>
           </div>
+
+          <!-- Datos del paciente -->
+          <section class="border rounded-md p-4 space-y-3">
+            <h2 class="font-medium">Datos del paciente</h2>
+            <template v-if="hasFixedData()">
+              <div class="grid grid-cols-2 gap-3">
+                <div v-if="user.birth_date" class="space-y-0.5">
+                  <p class="text-xs text-muted-foreground">Fecha de nacimiento</p>
+                  <p class="text-sm">{{ formatDate(user.birth_date) }}</p>
+                </div>
+                <div v-if="user.sex" class="space-y-0.5">
+                  <p class="text-xs text-muted-foreground">Sexo</p>
+                  <p class="text-sm">{{ sexLabel(user.sex) }}</p>
+                </div>
+                <div v-if="user.height" class="space-y-0.5">
+                  <p class="text-xs text-muted-foreground">Estatura</p>
+                  <p class="text-sm">{{ user.height }} cm</p>
+                </div>
+                <div v-if="user.phone" class="space-y-0.5">
+                  <p class="text-xs text-muted-foreground">Teléfono</p>
+                  <p class="text-sm">{{ user.phone }}</p>
+                </div>
+              </div>
+            </template>
+            <p v-else class="text-muted-foreground text-sm">Sin datos registrados.</p>
+
+          </section>
+
+          <!-- Plan de alimentación -->
+          <section class="border rounded-md p-4 space-y-3">
+            <h2 class="font-medium">Plan de alimentación</h2>
+            <template v-if="plan">
+              <div class="space-y-1">
+                <p class="text-xs text-muted-foreground">Creado: {{ formatDate(plan.created_at) }}</p>
+                <p class="text-xs text-muted-foreground">Última actualización: {{ formatDate(plan.updated_at) }}</p>
+              </div>
+            </template>
+            <p v-else class="text-muted-foreground text-sm">Sin plan asignado.</p>
+            <Button size="sm" @click="router.push({ name: 'admin-meal-plan', params: { id: user!.id } })">
+              {{ plan ? 'Ver plan' : 'Crear plan' }}
+            </Button>
+          </section>
+
+          <!-- Seguimiento -->
+          <section class="border rounded-md p-4 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="font-medium">Seguimiento</h2>
+              <Button size="sm" variant="outline"
+                @click="router.push({ name: 'admin-tracking', params: { id: user!.id } })">
+                Ver todo
+              </Button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <ChartPeso :data="chartPesoData.length ? chartPesoData : undefined" />
+              <ChartCintura :data="chartCinturaData.length ? chartCinturaData : undefined" />
+              <ChartComposicion :fatPct="lastFatPct" :musclePct="lastMusclePct" />
+            </div>
+          </section>
         </template>
-        <p v-else class="text-muted-foreground text-sm">Sin plan asignado.</p>
-        <Button size="sm" @click="router.push({ name: 'admin-meal-plan', params: { id: user!.id } })">
-          {{ plan ? 'Ver plan' : 'Crear plan' }}
-        </Button>
-      </section>
+      </div>
+    </div>
 
-      <!-- Seguimiento -->
-      <section class="border rounded-md p-4 space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="font-medium">Seguimiento</h2>
-          <Button size="sm" variant="outline"
-            @click="router.push({ name: 'admin-tracking', params: { id: user!.id } })">
-            Ver todo
-          </Button>
-        </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <ChartPeso :data="chartPesoData.length ? chartPesoData : undefined" />
-          <ChartCintura :data="chartCinturaData.length ? chartCinturaData : undefined" />
-          <ChartComposicion :fatPct="lastFatPct" :musclePct="lastMusclePct" />
-        </div>
-      </section>
-    </template>
+
   </div>
 </template>
