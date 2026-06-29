@@ -3,9 +3,9 @@ import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from './composables/useUser'
 import { useTracking } from '@/modules/tracking/composables/useTracking'
+import { useMealPlan } from '@/modules/meal-plans/composables/useMealPlan'
 
 import { Input } from '@/components/ui/input'
-import { supabase } from '@/lib/supabase'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
@@ -18,15 +18,15 @@ import { ArrowLeft } from 'lucide-vue-next'
 
 // ui_components
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarImage } from '@/components/ui/avatar'
 
-// components
-import UserProfile from '@/components/shared/UserProfile.vue'
 
 const route = useRoute()
 const router = useRouter()
 const userId = route.params.id as string
 const { user, loading, updateProfile } = useUser(userId)
 const { sessions, fetchSessions } = useTracking()
+const { plan, fetchPlan } = useMealPlan()
 
 function getMeasurement(session: typeof sessions.value[number] | undefined, metric: string) {
   return session?.measurements?.find(m => m.metric === metric)?.value ?? null
@@ -47,14 +47,8 @@ const chartCinturaData = computed(() =>
 const lastFatPct = computed(() => getMeasurement(sessions.value[0], 'fat_pct') ?? undefined)
 const lastMusclePct = computed(() => getMeasurement(sessions.value[0], 'muscle_pct') ?? undefined)
 
-const plan = ref<{ created_at: string; updated_at: string } | null>(null)
-onMounted(async () => {
-  const { data } = await supabase
-    .from('meal_plans')
-    .select('created_at, updated_at')
-    .eq('user_id', userId)
-    .maybeSingle()
-  plan.value = data
+onMounted(() => {
+  fetchPlan(userId)
   fetchSessions(userId)
 })
 
@@ -100,96 +94,131 @@ async function saveProfile() {
 
 <template>
   <div id="user-detail-view" class="space-y-4">
+    <!-- header -->
+    <header>
+      <button class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer" @click="router.back()">
+        <ArrowLeft :size="15" />
+        Volver al Directorio de usuario
+      </button>
+    </header>
 
-    <!-- button_back -->
-    <button class="text-sm text-muted-foreground flex items-center gap-2 cursor-pointer" @click="router.back()">
-      <ArrowLeft :size="15" />
-      Volver al Directorio de usuario
-    </button>
-
-    <!-- main -->
-    <div class="grid gap-4 lg:grid-cols-7">
+    <!-- body -->
+    <div class="flex flex-col gap-4 | lg:flex-row lg:gap-6">
       <!-- aside -->
-      <aside class="lg:col-span-2 space-y-3">
-        <UserProfile :user="user" />
+      <aside class="w-full lg:w-[300px]">
+        <div class="border rounded-xl">
+          <!-- basic -->
+          <section class="px-4 py-6 text-center space-y-3">
+            <Avatar class="mx-auto size-18">
+              <AvatarImage v-if="user?.avatar_url" :src="user.avatar_url" />
+              <AvatarImage v-else src="https://github.com/shadcn.png" />
+            </Avatar>
 
-        <!-- edit -->
-        <Sheet v-model:open="profileSheetOpen">
-          <SheetTrigger as-child>
-            <Button class="w-full" @click="openProfileSheet">
-              {{ hasFixedData() ? 'Editar datos' : 'Completar datos' }}
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Datos del paciente</SheetTitle>
-            </SheetHeader>
-            <div class="space-y-4 py-2 flex-1 overflow-y-auto">
-              <div class="space-y-1.5">
-                <label class="text-sm font-medium">Fecha de nacimiento</label>
-                <Input v-model="profileForm.birth_date" type="date" />
-              </div>
-              <div class="space-y-1.5">
-                <label class="text-sm font-medium">Sexo</label>
-                <select v-model="profileForm.sex" class="w-full border rounded-md px-3 py-2 text-sm bg-background">
-                  <option value="">Sin especificar</option>
-                  <option value="male">Masculino</option>
-                  <option value="female">Femenino</option>
-                </select>
-              </div>
-              <div class="space-y-1.5">
-                <label class="text-sm font-medium">Estatura (cm)</label>
-                <Input v-model="profileForm.height" type="number" step="0.1" placeholder="170" />
-              </div>
-              <div class="space-y-1.5">
-                <label class="text-sm font-medium">Teléfono</label>
-                <Input v-model="profileForm.phone" type="tel" placeholder="+56 9 1234 5678" />
-              </div>
+            <div>
+              <h1 class="text-xl font-semibold">{{ user?.full_name }}</h1>
+              <p v-if="user?.birth_date" class="text-sm text-muted-foreground">{{ formatDate(user?.birth_date) }}</p>
             </div>
-            <SheetFooter>
-              <Button variant="outline" @click="profileSheetOpen = false">Cancelar</Button>
-              <Button @click="saveProfile">Guardar</Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+
+            <Sheet v-model:open="profileSheetOpen">
+              <SheetTrigger as-child>
+                <Button size="xs" variant="outline" @click="openProfileSheet">
+                  {{ hasFixedData() ? 'Editar datos' : 'Completar datos' }}
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Datos del paciente</SheetTitle>
+                </SheetHeader>
+                <div class="space-y-4 py-2 flex-1 overflow-y-auto">
+                  <div class="space-y-1.5">
+                    <label class="text-sm font-medium">Fecha de nacimiento</label>
+                    <Input v-model="profileForm.birth_date" type="date" />
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="text-sm font-medium">Sexo</label>
+                    <select v-model="profileForm.sex" class="w-full border rounded-md px-3 py-2 text-sm bg-background">
+                      <option value="">Sin especificar</option>
+                      <option value="male">Masculino</option>
+                      <option value="female">Femenino</option>
+                    </select>
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="text-sm font-medium">Estatura (cm)</label>
+                    <Input v-model="profileForm.height" type="number" step="0.1" placeholder="170" />
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="text-sm font-medium">Teléfono</label>
+                    <Input v-model="profileForm.phone" type="tel" placeholder="+56 9 1234 5678" />
+                  </div>
+                </div>
+                <SheetFooter>
+                  <Button variant="outline" @click="profileSheetOpen = false">Cancelar</Button>
+                  <Button @click="saveProfile">Guardar</Button>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
+          </section>
+
+          <!-- info -->
+          <section class="border-t p-4">
+            <h5 class="text-sm font-medium text-muted-foreground">Datos del Paciente</h5>
+            <ul class="text-sm mt-4 grid grid-cols-2 gap-4">
+              <!-- item -->
+              <li>
+                <div>
+                  <h4 class="text-muted-foreground">Sexo</h4>
+                  <p class="font-medium">lajsklskjslsjal</p>
+                </div>
+              </li>
+              <!-- item -->
+              <li v-if="user?.sex">
+                <div>
+                  <h4 class="text-muted-foreground">Sexo</h4>
+                  <p class="font-medium">{{ sexLabel(user.sex) }}</p>
+                </div>
+              </li>
+              <!-- item -->
+              <li v-if="user?.height">
+                <div>
+                  <h4 class="text-muted-foreground">Estatura</h4>
+                  <p class="font-medium">{{ user.height }} cm</p>
+                </div>
+              </li>
+            </ul>
+          </section>
+
+          <!-- contact -->
+          <section class="border-t p-4">
+            <h5 class="text-sm font-medium text-muted-foreground">Información de Contacto</h5>
+            <ul class="text-sm mt-4 grid gap-4">
+              <li v-if="user?.phone">
+                <div>
+                  <h4 class="text-muted-foreground">Teléfono / Whatsapp</h4>
+                  <a :href="`https://wa.me/${user?.phone}`" target="_blank" class="font-medium">
+                    +56 {{ user?.phone }}
+                  </a>
+                </div>
+              </li>
+
+              <li v-if="user?.email">
+                <div>
+                  <h4 class="text-muted-foreground">Correo Electrónico</h4>
+                  <a :href="`mailto:${user?.email}`" target="_blank" class="font-medium">
+                    {{ user?.email }}
+                  </a>
+                </div>
+              </li>
+            </ul>
+          </section>
+        </div>
       </aside>
 
       <!-- content -->
-      <div class="lg:col-span-5">
+      <div class="flex-1 space-y-4">
         <div v-if="loading" class="text-muted-foreground text-sm">Cargando...</div>
 
         <template v-else-if="user">
-          <div class="space-y-1">
-            <h1 class="text-2xl font-semibold">{{ user.full_name }}</h1>
-            <p class="text-muted-foreground text-sm capitalize">{{ user.role }}</p>
-          </div>
 
-          <!-- Datos del paciente -->
-          <section class="border rounded-md p-4 space-y-3">
-            <h2 class="font-medium">Datos del paciente</h2>
-            <template v-if="hasFixedData()">
-              <div class="grid grid-cols-2 gap-3">
-                <div v-if="user.birth_date" class="space-y-0.5">
-                  <p class="text-xs text-muted-foreground">Fecha de nacimiento</p>
-                  <p class="text-sm">{{ formatDate(user.birth_date) }}</p>
-                </div>
-                <div v-if="user.sex" class="space-y-0.5">
-                  <p class="text-xs text-muted-foreground">Sexo</p>
-                  <p class="text-sm">{{ sexLabel(user.sex) }}</p>
-                </div>
-                <div v-if="user.height" class="space-y-0.5">
-                  <p class="text-xs text-muted-foreground">Estatura</p>
-                  <p class="text-sm">{{ user.height }} cm</p>
-                </div>
-                <div v-if="user.phone" class="space-y-0.5">
-                  <p class="text-xs text-muted-foreground">Teléfono</p>
-                  <p class="text-sm">{{ user.phone }}</p>
-                </div>
-              </div>
-            </template>
-            <p v-else class="text-muted-foreground text-sm">Sin datos registrados.</p>
-
-          </section>
 
           <!-- Plan de alimentación -->
           <section class="border rounded-md p-4 space-y-3">
@@ -225,8 +254,5 @@ async function saveProfile() {
         </template>
       </div>
     </div>
-
-
-
   </div>
 </template>
