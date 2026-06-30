@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 
-
 const route = useRoute()
 const router = useRouter()
 const userId = route.params.id as string
@@ -131,7 +130,7 @@ async function saveProfile() {
                   {{ hasFixedData() ? 'Editar datos' : 'Completar datos' }}
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent @open-auto-focus.prevent>
                 <SheetHeader>
                   <SheetTitle>Datos del paciente</SheetTitle>
                 </SheetHeader>
