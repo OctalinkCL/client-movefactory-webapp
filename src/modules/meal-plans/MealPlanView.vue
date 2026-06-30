@@ -14,6 +14,8 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
+// icon
+import { XIcon, PlusIcon } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -247,17 +249,16 @@ async function submitForm() {
                       <option v-for="p in PORTION_OPTIONS" :key="p.value" :value="p.value">{{ p.label }}</option>
                     </NativeSelect>
                   </div>
-                  <button
-                    class="border rounded-md px-2.5 text-muted-foreground hover:text-destructive transition-colors"
-                    @click="removeItemFromForm(i)">×</button>
+                  <Button size="icon" variant="destructive" @click="removeItemFromForm(i)">
+                    <XIcon :size="15" />
+                  </Button>
                 </div>
               </div>
 
-              <button
-                class="w-full border border-dashed rounded-md py-2 text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-                @click="addRow">
-                + Agregar tipo de comida
-              </button>
+              <Button class="w-full" size="lg" variant="secondary" @click="addRow">
+                <PlusIcon :size="15" />
+                Agregar tipo de comida
+              </Button>
             </div>
 
             <!-- Días asignados -->
@@ -271,10 +272,10 @@ async function submitForm() {
                 </div>
               </div>
               <div class="grid grid-cols-7 gap-3">
-                <button v-for="(label, di) in DAY_LABELS" :key="di"
-                  class=" h-9 rounded-md text-sm font-medium border transition-colors" :class="form.days.includes(di + 1)
-                    ? 'bg-foreground text-background border-foreground'
-                    : 'hover:bg-muted'" @click="toggleDay(di + 1)">{{ label }}</button>
+                <Button v-for="(label, di) in DAY_LABELS" :key="di" @click="toggleDay(di + 1)"
+                  :variant="form.days.includes(di + 1) ? 'default' : 'secondary'">
+                  {{ label }}
+                </Button>
               </div>
               <p v-if="!form.days.length" class="text-xs text-muted-foreground italic">Selecciona al menos un día.</p>
             </div>
@@ -288,7 +289,7 @@ async function submitForm() {
             </div>
           </div>
 
-          <SheetFooter class="grid grid-cols-2 gap-4">
+          <SheetFooter class="grid grid-cols-2 gap-4 border-t">
             <Button size="lg" variant="outline" @click="resetForm">Cancelar</Button>
             <Button size="lg" @click="submitForm" :disabled="!form.momentId || !form.days.length">
               {{ isEditing ? 'Guardar cambios' : 'Guardar' }}
