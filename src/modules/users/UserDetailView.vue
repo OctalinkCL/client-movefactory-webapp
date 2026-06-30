@@ -19,6 +19,7 @@ import { ArrowLeft } from 'lucide-vue-next'
 // ui_components
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
 
 
 const route = useRoute()
@@ -109,17 +110,29 @@ async function saveProfile() {
         <div class="border rounded-xl">
           <!-- basic -->
           <section class="px-4 py-6 text-center space-y-3">
-            <Avatar class="mx-auto size-18">
-              <AvatarImage v-if="user?.avatar_url" :src="user.avatar_url" />
-              <AvatarImage v-else src="https://github.com/shadcn.png" />
-            </Avatar>
-
+            <!-- avatar -->
             <div>
-              <h1 class="text-xl font-semibold">{{ user?.full_name }}</h1>
-              <p v-if="user?.birth_date" class="text-sm text-muted-foreground">{{ formatDate(user?.birth_date) }}</p>
+              <Skeleton v-if="loading" class="size-18 rounded-full mx-auto" />
+              <Avatar v-else class="mx-auto size-18">
+                <AvatarImage v-if="user?.avatar_url" :src="user.avatar_url" />
+                <AvatarImage v-else src="https://github.com/shadcn.png" />
+              </Avatar>
             </div>
-
-            <Sheet v-model:open="profileSheetOpen">
+            <!-- name -->
+            <div>
+              <div v-if="!loading">
+                <h1 class="text-xl font-semibold">{{ user?.full_name }}</h1>
+                <p v-if="user?.birth_date" class="text-sm text-muted-foreground">{{ formatDate(user?.birth_date) }}</p>
+              </div>
+              <!-- skeleton -->
+              <div v-else class="flex flex-col items-center space-y-1">
+                <Skeleton class="h-7 w-[190px]" />
+                <Skeleton class="h-5 w-[120px]" />
+                <Skeleton class="h-6 w-[100px] mt-1.5" />
+              </div>
+            </div>
+            <!-- sheet -->
+            <Sheet v-if="!loading" v-model:open="profileSheetOpen">
               <SheetTrigger as-child>
                 <Button size="xs" variant="outline" @click="openProfileSheet">
                   {{ hasFixedData() ? 'Editar datos' : 'Completar datos' }}
@@ -167,21 +180,16 @@ async function saveProfile() {
               <li>
                 <div>
                   <h4 class="text-muted-foreground">Sexo</h4>
-                  <p class="font-medium">lajsklskjslsjal</p>
+                  <Skeleton class="h-4 w-25" v-if="loading" />
+                  <p v-else class="font-medium">{{ user?.sex ? sexLabel(user?.sex) : 'Sin especificar' }}</p>
                 </div>
               </li>
               <!-- item -->
-              <li v-if="user?.sex">
-                <div>
-                  <h4 class="text-muted-foreground">Sexo</h4>
-                  <p class="font-medium">{{ sexLabel(user.sex) }}</p>
-                </div>
-              </li>
-              <!-- item -->
-              <li v-if="user?.height">
+              <li>
                 <div>
                   <h4 class="text-muted-foreground">Estatura</h4>
-                  <p class="font-medium">{{ user.height }} cm</p>
+                  <Skeleton class="h-4 w-25" v-if="loading" />
+                  <p v-else class="font-medium">{{ user?.height ? `${user?.height} cm` : 'Sin especificar' }}</p>
                 </div>
               </li>
             </ul>
@@ -191,20 +199,22 @@ async function saveProfile() {
           <section class="border-t p-4">
             <h5 class="text-sm font-medium text-muted-foreground">Información de Contacto</h5>
             <ul class="text-sm mt-4 grid gap-4">
-              <li v-if="user?.phone">
+              <li>
                 <div>
                   <h4 class="text-muted-foreground">Teléfono / Whatsapp</h4>
-                  <a :href="`https://wa.me/${user?.phone}`" target="_blank" class="font-medium">
-                    +56 {{ user?.phone }}
+                  <Skeleton class="h-4 w-40" v-if="loading" />
+                  <a v-else :href="`https://wa.me/${user?.phone}`" target="_blank" class="font-medium">
+                    {{ user?.phone ? `+56 ${user?.phone}` : 'Sin especificar' }}
                   </a>
                 </div>
               </li>
 
-              <li v-if="user?.email">
+              <li>
                 <div>
                   <h4 class="text-muted-foreground">Correo Electrónico</h4>
-                  <a :href="`mailto:${user?.email}`" target="_blank" class="font-medium">
-                    {{ user?.email }}
+                  <Skeleton class="h-4 w-40" v-if="loading" />
+                  <a v-else :href="`mailto:${user?.email}`" target="_blank" class="font-medium">
+                    {{ user?.email || 'Sin especificar' }}
                   </a>
                 </div>
               </li>
@@ -215,14 +225,11 @@ async function saveProfile() {
 
       <!-- content -->
       <div class="flex-1 space-y-4">
-        <div v-if="loading" class="text-muted-foreground text-sm">Cargando...</div>
 
-        <template v-else-if="user">
-
-
-          <!-- Plan de alimentación -->
-          <section class="border rounded-md p-4 space-y-3">
-            <h2 class="font-medium">Plan de alimentación</h2>
+        <!-- plan -->
+        <section class="bg-amber-50 rounded-xl p-4 border border-amber-200 flex items-center">
+          <div class="flex-1">
+            <h4 class="text-lg font-medium text-amber-800">Plan de alimentación</h4>
             <template v-if="plan">
               <div class="space-y-1">
                 <p class="text-xs text-muted-foreground">Creado: {{ formatDate(plan.created_at) }}</p>
@@ -230,28 +237,32 @@ async function saveProfile() {
               </div>
             </template>
             <p v-else class="text-muted-foreground text-sm">Sin plan asignado.</p>
-            <Button size="sm" @click="router.push({ name: 'admin-meal-plan', params: { id: user!.id } })">
-              {{ plan ? 'Ver plan' : 'Crear plan' }}
-            </Button>
-          </section>
+          </div>
+          <Button class="bg-amber-500 hover:bg-amber-600" @click="router.push({ name: 'admin-meal-plan' })">
+            {{ plan ? 'Ver plan' : 'Crear plan' }}
+          </Button>
+        </section>
 
-          <!-- Seguimiento -->
-          <section class="border rounded-md p-4 space-y-4">
-            <div class="flex items-center justify-between">
-              <h2 class="font-medium">Seguimiento</h2>
-              <Button size="sm" variant="outline"
-                @click="router.push({ name: 'admin-tracking', params: { id: user!.id } })">
-                Ver todo
-              </Button>
-            </div>
+        <!-- v-else-if="user"  v-if="loading" @click="router.push({ name: 'admin-tracking', params: { id: user!.id } })" -->
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <ChartPeso :data="chartPesoData.length ? chartPesoData : undefined" />
-              <ChartCintura :data="chartCinturaData.length ? chartCinturaData : undefined" />
-              <ChartComposicion :fatPct="lastFatPct" :musclePct="lastMusclePct" />
-            </div>
-          </section>
-        </template>
+        <header class="flex items-center justify-between">
+          <h3 class="text-xl font-semibold">Seguimiento</h3>
+          <Button @click="router.push({ name: 'admin-tracking' })">
+            Ver Datos
+          </Button>
+        </header>
+
+        <section class="border rounded-xl p-4">
+          <ChartPeso :data="chartPesoData.length ? chartPesoData : undefined" />
+        </section>
+
+        <section class="border rounded-xl p-4">
+          <ChartCintura :data="chartCinturaData.length ? chartCinturaData : undefined" />
+        </section>
+
+        <section class="border rounded-xl p-4">
+          <ChartComposicion :fatPct="lastFatPct" :musclePct="lastMusclePct" />
+        </section>
       </div>
     </div>
   </div>
