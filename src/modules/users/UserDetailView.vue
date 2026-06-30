@@ -7,6 +7,7 @@ import { useMealPlan } from '@/modules/meal-plans/composables/useMealPlan'
 
 import { formatDateDisplay, sexLabel, calcAge } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
+import { NativeSelect } from '@/components/ui/native-select'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
@@ -130,22 +131,22 @@ async function saveProfile() {
                   {{ hasFixedData() ? 'Editar datos' : 'Completar datos' }}
                 </Button>
               </SheetTrigger>
-              <SheetContent @open-auto-focus.prevent>
+              <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
                 <SheetHeader>
                   <SheetTitle>Datos del paciente</SheetTitle>
                 </SheetHeader>
-                <div class="space-y-4 py-2 flex-1 overflow-y-auto">
+                <div class="px-4 space-y-4  ">
                   <div class="space-y-1.5">
                     <label class="text-sm font-medium">Fecha de nacimiento</label>
                     <Input v-model="profileForm.birth_date" type="date" />
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-sm font-medium">Sexo</label>
-                    <select v-model="profileForm.sex" class="w-full border rounded-md px-3 py-2 text-sm bg-background">
+                    <NativeSelect v-model="profileForm.sex">
                       <option value="">Sin especificar</option>
                       <option value="male">Masculino</option>
                       <option value="female">Femenino</option>
-                    </select>
+                    </NativeSelect>
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-sm font-medium">Estatura (cm)</label>
@@ -156,7 +157,7 @@ async function saveProfile() {
                     <Input v-model="profileForm.phone" type="tel" placeholder="+56 9 1234 5678" />
                   </div>
                 </div>
-                <SheetFooter>
+                <SheetFooter class="grid grid-cols-2 gap-4">
                   <Button variant="outline" @click="profileSheetOpen = false">Cancelar</Button>
                   <Button @click="saveProfile">Guardar</Button>
                 </SheetFooter>
