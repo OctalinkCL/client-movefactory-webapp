@@ -12,7 +12,6 @@ import {
 import ChartPeso from '@/components/chart/ChartPeso.vue'
 import ChartCintura from '@/components/chart/ChartCintura.vue'
 import ChartComposicion from '@/components/chart/ChartComposicion.vue'
-import { ArrowLeft } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
