@@ -33,7 +33,15 @@ export function useDocuments() {
     loading.value = false
   }
 
+  async function openDocument(filePath: string) {
+    const { data, error: err } = await supabase.storage
+      .from('documents')
+      .createSignedUrl(filePath, 60)
+    if (err || !data) return
+    window.open(data.signedUrl, '_blank')
+  }
+
   onMounted(fetchDocuments)
 
-  return { documents, loading, error, fetchDocuments }
+  return { documents, loading, error, fetchDocuments, openDocument }
 }

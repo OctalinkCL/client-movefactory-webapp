@@ -1,15 +1,27 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import EmptyItem from '@/components/shared/EmptyItem.vue'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import { Pencil, ExternalLink } from 'lucide-vue-next'
 import UploadDocumentSheet from './components/UploadDocumentSheet.vue'
+import EditDocumentSheet from './components/EditDocumentSheet.vue'
 import { useDocuments } from './composables/useDocuments'
 import { formatDate } from '@/lib/utils'
+import type { Document } from './composables/useDocuments'
 
-const { documents, loading, fetchDocuments } = useDocuments()
+const { documents, loading, fetchDocuments, openDocument } = useDocuments()
+
+const editOpen = ref(false)
+const selectedDocument = ref<Document | null>(null)
+
+function openEdit(doc: Document) {
+  selectedDocument.value = doc
+  editOpen.value = true
+}
 </script>
 
 <template>
@@ -57,11 +69,26 @@ const { documents, loading, fetchDocuments } = useDocuments()
             <TableCell>{{ doc.profiles?.full_name ?? '—' }}</TableCell>
             <TableCell>{{ formatDate(doc.created_at) }}</TableCell>
             <TableCell class="text-right">
-              <Button size="sm" variant="ghost">Ver</Button>
+              <div class="flex items-center justify-end gap-1">
+                <Button size="sm" variant="ghost" @click="openDocument(doc.file_path)">
+                  <ExternalLink class="size-4" />
+                  Ver
+                </Button>
+                <Button size="sm" variant="ghost" @click="openEdit(doc)">
+                  <Pencil class="size-4" />
+                  Editar
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         </TableBody>
       </Table>
     </div>
   </div>
+
+  <EditDocumentSheet
+    v-model:open="editOpen"
+    :document="selectedDocument"
+    @updated="fetchDocuments"
+  />
 </template>
