@@ -3,7 +3,7 @@ import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTracking } from './composables/useTracking'
 import { useAuthStore } from '@/stores/auth'
-import { METRICS } from './constants'
+import { METRICS, getMetric } from './constants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -89,40 +89,27 @@ async function submitForm() {
 
       <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
 
-      <div v-else-if="sessions.length" class="border rounded-md overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b bg-muted/40">
-              <th class="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Fecha</th>
-              <th
-                v-for="metric in METRICS"
-                :key="metric.key"
-                class="text-right px-3 py-2 font-medium text-muted-foreground whitespace-nowrap"
-              >
-                {{ metric.label }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="session in sessions"
-              :key="session.id"
-              class="border-b last:border-0 hover:bg-muted/20 transition-colors"
+      <div v-else-if="sessions.length" class="space-y-2">
+        <div
+          v-for="session in sessions"
+          :key="session.id"
+          class="border rounded-md p-3 space-y-2"
+        >
+          <p class="text-sm font-medium">{{ formatDate(session.date) }}</p>
+
+          <div class="flex flex-wrap gap-1.5">
+            <span
+              v-for="m in session.measurements"
+              :key="m.metric"
+              class="text-xs border rounded-full px-2 py-1 bg-muted/40"
             >
-              <td class="px-3 py-2 whitespace-nowrap">{{ formatDate(session.date) }}</td>
-              <td
-                v-for="metric in METRICS"
-                :key="metric.key"
-                class="px-3 py-2 text-right text-muted-foreground whitespace-nowrap"
-              >
-                {{ session.measurements?.find(m => m.metric === metric.key)?.value ?? '—' }}
-                <span v-if="session.measurements?.find(m => m.metric === metric.key)" class="text-xs">
-                  {{ metric.unit }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              <span class="text-muted-foreground">{{ getMetric(m.metric)?.label }}:</span>
+              <span class="font-medium">{{ m.value }} {{ getMetric(m.metric)?.unit }}</span>
+            </span>
+          </div>
+
+          <p v-if="session.notes" class="text-xs text-muted-foreground italic">{{ session.notes }}</p>
+        </div>
       </div>
 
       <p v-else class="text-sm text-muted-foreground">Sin sesiones registradas.</p>
