@@ -5,6 +5,7 @@ import { useUser } from './composables/useUser'
 import { useTracking } from '@/modules/tracking/composables/useTracking'
 import { useMealPlan } from '@/modules/meal-plans/composables/useMealPlan'
 
+import { formatDateDisplay, sexLabel, calcAge } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
@@ -53,15 +54,6 @@ onMounted(() => {
   fetchSessions(userId)
 })
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-function sexLabel(sex: string | null) {
-  if (sex === 'male') return 'Masculino'
-  if (sex === 'female') return 'Femenino'
-  return null
-}
 
 const hasFixedData = () => !!(user.value?.birth_date || user.value?.sex || user.value?.height)
 
@@ -122,7 +114,8 @@ async function saveProfile() {
             <div>
               <div v-if="!loading">
                 <h1 class="text-xl font-semibold">{{ user?.full_name }}</h1>
-                <p v-if="user?.birth_date" class="text-sm text-muted-foreground">{{ formatDate(user?.birth_date) }}</p>
+                <p v-if="user?.birth_date" class="text-sm text-muted-foreground">{{ formatDateDisplay(user?.birth_date)
+                  }}</p>
               </div>
               <!-- skeleton -->
               <div v-else class="flex flex-col items-center space-y-1">
@@ -179,6 +172,16 @@ async function saveProfile() {
               <!-- item -->
               <li>
                 <div>
+                  <h4 class="text-muted-foreground">Edad</h4>
+                  <Skeleton class="h-4 w-25" v-if="loading" />
+                  <p v-else class="font-medium">
+                    {{ user?.birth_date ? `${calcAge(user.birth_date)} años` : 'Sin especificar' }}
+                  </p>
+                </div>
+              </li>
+              <!-- item -->
+              <li>
+                <div>
                   <h4 class="text-muted-foreground">Sexo</h4>
                   <Skeleton class="h-4 w-25" v-if="loading" />
                   <p v-else class="font-medium">{{ user?.sex ? sexLabel(user?.sex) : 'Sin especificar' }}</p>
@@ -232,8 +235,9 @@ async function saveProfile() {
             <h4 class="text-lg font-medium text-amber-800">Plan de alimentación</h4>
             <template v-if="plan">
               <div class="space-y-1">
-                <p class="text-xs text-muted-foreground">Creado: {{ formatDate(plan.created_at) }}</p>
-                <p class="text-xs text-muted-foreground">Última actualización: {{ formatDate(plan.updated_at) }}</p>
+                <p class="text-xs text-muted-foreground">Creado: {{ formatDateDisplay(plan.created_at) }}</p>
+                <p class="text-xs text-muted-foreground">Última actualización: {{ formatDateDisplay(plan.updated_at) }}
+                </p>
               </div>
             </template>
             <p v-else class="text-muted-foreground text-sm">Sin plan asignado.</p>
