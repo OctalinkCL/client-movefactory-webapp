@@ -8,7 +8,7 @@ export function useUserFoodSelections() {
   async function fetchAll(userId: string) {
     const { data } = await supabase
       .from('user_food_selections')
-      .select('*, food:foods(*, category:food_categories(id, name))')
+      .select('*, food:foods(*, category:food_categories(id, name)), meal_plan_item:meal_plan_items(portion)')
       .eq('user_id', userId)
     selections.value = data ?? []
   }
