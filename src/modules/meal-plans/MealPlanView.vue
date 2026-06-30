@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useUser } from '@/modules/users/composables/useUser'
 import { useMealPlan } from './composables/useMealPlan'
 import { useMoments } from './composables/useMoments'
 import { Button } from '@/components/ui/button'
@@ -22,7 +21,6 @@ const route = useRoute()
 const router = useRouter()
 const userId = route.params.id as string
 
-const { user } = useUser(userId)
 const { plan, loading, error, fetchOrCreatePlan, createMoment, updateMoment, removeMoment } = useMealPlan()
 const { moments } = useMoments()
 
@@ -132,18 +130,14 @@ async function submitForm() {
   <div id="meal-plan-view" class="space-y-4">
     <!-- header -->
     <header>
-      <button class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer" @click="router.back()">
+      <button class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer"
+        @click="router.push({ name: 'admin-users-detail', params: { id: userId } })">
         <ArrowLeft :size="15" />
-        Volver al Paciente
+        Volver al resumen
       </button>
     </header>
 
-    <div class="flex items-center justify-between">
-      <div class="space-y-1">
-        <h1 class="text-2xl font-semibold">Plan de alimentación</h1>
-        <p v-if="user" class="text-muted-foreground text-sm">{{ user.full_name }}</p>
-      </div>
-    </div>
+    <h1 class="text-2xl font-semibold">Plan de alimentación</h1>
 
     <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
     <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>

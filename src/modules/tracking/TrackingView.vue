@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useUser } from '@/modules/users/composables/useUser'
 import { useTracking } from './composables/useTracking'
 import { useAuthStore } from '@/stores/auth'
 import { METRICS } from './constants'
@@ -13,13 +12,13 @@ import {
 import ChartPeso from '@/components/chart/ChartPeso.vue'
 import ChartCintura from '@/components/chart/ChartCintura.vue'
 import ChartComposicion from '@/components/chart/ChartComposicion.vue'
+import { ArrowLeft } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
 const userId = route.params.id as string
 const authStore = useAuthStore()
 
-const { user } = useUser(userId)
 const { sessions, loading, fetchSessions, createSession } = useTracking()
 
 onMounted(() => fetchSessions(userId))
@@ -75,17 +74,16 @@ async function submitForm() {
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
-    <button class="text-sm text-muted-foreground hover:underline" @click="router.back()">
-      ← Volver
-    </button>
+  <div class="space-y-4">
+    <header>
+      <button class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer"
+        @click="router.push({ name: 'admin-users-detail', params: { id: userId } })">
+        <ArrowLeft :size="15" />
+        Volver al resumen
+      </button>
+    </header>
 
-    <div class="flex items-center justify-between">
-      <div class="space-y-1">
-        <h1 class="text-2xl font-semibold">Seguimiento</h1>
-        <p v-if="user" class="text-muted-foreground text-sm">{{ user.full_name }}</p>
-      </div>
-    </div>
+    <h1 class="text-2xl font-semibold">Seguimiento</h1>
 
     <!-- Gráficas -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">

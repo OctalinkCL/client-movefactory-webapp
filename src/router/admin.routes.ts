@@ -29,17 +29,26 @@ export const adminRoutes: RouteRecordRaw[] = [
         component: () => import("@/modules/users/UsersView.vue"),
       },
       {
-        path: "users/:id/detail",
-        name: "admin-users-detail",
+        path: "users/:id",
         meta: { roles: ["admin", "nutritionist"] },
-        component: () => import("@/modules/users/UserDetailView.vue"),
-      },
-      // Meal_Plan
-      {
-        path: "users/:id/meal-plan",
-        name: "admin-meal-plan",
-        meta: { roles: ["admin", "nutritionist"] },
-        component: () => import("@/modules/meal-plans/MealPlanView.vue"),
+        component: () => import("@/modules/users/UserDetailLayout.vue"),
+        children: [
+          {
+            path: "detail",
+            name: "admin-users-detail",
+            component: () => import("@/modules/users/UserDetailView.vue"),
+          },
+          {
+            path: "meal-plan",
+            name: "admin-meal-plan",
+            component: () => import("@/modules/meal-plans/MealPlanView.vue"),
+          },
+          {
+            path: "tracking",
+            name: "admin-tracking",
+            component: () => import("@/modules/tracking/TrackingView.vue"),
+          },
+        ],
       },
       // Foods
       {
@@ -54,13 +63,6 @@ export const adminRoutes: RouteRecordRaw[] = [
         name: "admin-documents",
         meta: { roles: ["admin", "nutritionist"] },
         component: () => import("@/modules/documents/DocumentsView.vue"),
-      },
-      // Tracking
-      {
-        path: "users/:id/tracking",
-        name: "admin-tracking",
-        meta: { roles: ["admin", "nutritionist"] },
-        component: () => import("@/modules/tracking/TrackingView.vue"),
       },
     ],
   },
