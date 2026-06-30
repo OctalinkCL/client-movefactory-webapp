@@ -6,6 +6,7 @@ import { useMealPlan } from './composables/useMealPlan'
 import { useMoments } from './composables/useMoments'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 import { NativeSelect } from '@/components/ui/native-select'
 import type { MealPlanMoment } from '@/types/meal-plan'
 import {
@@ -63,6 +64,7 @@ async function confirmDelete() {
 const dialogOpen = ref(false)
 const editingMomentId = ref<string | null>(null)
 const isEditing = computed(() => editingMomentId.value !== null)
+const isLoading = ref(false)
 
 const form = reactive({
   name: '',
@@ -115,11 +117,13 @@ function resetForm() {
 async function submitForm() {
   if (!form.momentId || !form.days.length || !plan.value) return
   const filledItems = form.items.filter(i => i.foodType)
+  isLoading.value = true
   if (isEditing.value) {
     await updateMoment(editingMomentId.value!, form.name || null, form.momentId, form.days, form.note, filledItems)
   } else {
     await createMoment(plan.value.id, form.name || null, form.momentId, form.days, form.note, filledItems)
   }
+  isLoading.value = false
   resetForm()
 }
 </script>
@@ -290,8 +294,9 @@ async function submitForm() {
           </div>
 
           <SheetFooter class="grid grid-cols-2 gap-4 border-t">
-            <Button size="lg" variant="outline" @click="resetForm">Cancelar</Button>
-            <Button size="lg" @click="submitForm" :disabled="!form.momentId || !form.days.length">
+            <Button size="lg" variant="outline" @click="resetForm" :disabled="isLoading">Cancelar</Button>
+            <Button size="lg" @click="submitForm" :disabled="!form.momentId || !form.days.length || isLoading">
+              <Spinner v-if="isLoading" />
               {{ isEditing ? 'Guardar cambios' : 'Guardar' }}
             </Button>
           </SheetFooter>
@@ -304,7 +309,7 @@ async function submitForm() {
             <DialogTitle>¿Eliminar este momento?</DialogTitle>
             <DialogDescription>
               <span class="font-medium text-foreground">{{ deletingMoment?.name ?? deletingMoment?.moment?.name
-                }}</span>
+              }}</span>
               · {{ deletingMoment?.days.length }} día(s) afectado(s)
             </DialogDescription>
           </DialogHeader>
