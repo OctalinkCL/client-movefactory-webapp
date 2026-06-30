@@ -131,9 +131,9 @@ async function submitForm() {
     <!-- header -->
     <header>
       <button class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer"
-        @click="router.push({ name: 'admin-users-detail', params: { id: userId } })">
+        @click="router.push({ name: 'admin-tracking', params: { id: userId } })">
         <ArrowLeft :size="15" />
-        Volver al resumen
+        Volver al seguimiento
       </button>
     </header>
 

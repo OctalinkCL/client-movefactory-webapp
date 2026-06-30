@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from './composables/useUser'
 import { formatDateDisplay, sexLabel, calcAge } from '@/lib/utils'
@@ -17,6 +17,8 @@ const route = useRoute()
 const router = useRouter()
 const userId = route.params.id as string
 const { user, loading, updateProfile } = useUser(userId)
+
+const activeTab = computed(() => route.name as string)
 
 const hasFixedData = () => !!(user.value?.birth_date || user.value?.sex || user.value?.height)
 
@@ -173,7 +175,29 @@ async function saveProfile() {
       </aside>
 
       <!-- contenido dinámico -->
-      <div class="flex-1 min-w-0">
+      <div class="flex-1 min-w-0 space-y-4">
+        <!-- nav -->
+        <div class="flex gap-2">
+          <button
+            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+            :class="activeTab === 'admin-tracking'
+              ? 'bg-foreground text-background'
+              : 'text-muted-foreground hover:text-foreground'"
+            @click="router.push({ name: 'admin-tracking', params: { id: userId } })"
+          >
+            Seguimiento
+          </button>
+          <button
+            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+            :class="activeTab === 'admin-meal-plan'
+              ? 'bg-foreground text-background'
+              : 'text-muted-foreground hover:text-foreground'"
+            @click="router.push({ name: 'admin-meal-plan', params: { id: userId } })"
+          >
+            Plan de alimentación
+          </button>
+        </div>
+
         <RouterView />
       </div>
     </div>

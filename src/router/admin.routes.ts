@@ -35,8 +35,7 @@ export const adminRoutes: RouteRecordRaw[] = [
         children: [
           {
             path: "detail",
-            name: "admin-users-detail",
-            component: () => import("@/modules/users/UserDetailView.vue"),
+            redirect: (to) => ({ name: "admin-tracking", params: to.params }),
           },
           {
             path: "meal-plan",

@@ -75,14 +75,6 @@ async function submitForm() {
 
 <template>
   <div class="space-y-4">
-    <header>
-      <button class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer"
-        @click="router.push({ name: 'admin-users-detail', params: { id: userId } })">
-        <ArrowLeft :size="15" />
-        Volver al resumen
-      </button>
-    </header>
-
     <h1 class="text-2xl font-semibold">Seguimiento</h1>
 
     <!-- Gráficas -->
