@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -79,12 +79,13 @@ async function submit() {
       </Button>
     </SheetTrigger>
 
-    <SheetContent class="flex flex-col gap-6 overflow-y-auto">
+    <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm flex flex-col gap-6 overflow-y-auto">
       <SheetHeader>
         <SheetTitle>Subir documento</SheetTitle>
+        <SheetDescription class="sr-only">Formulario para subir un documento y asignarlo a usuarios</SheetDescription>
       </SheetHeader>
 
-      <form @submit.prevent="submit" class="flex flex-col gap-5 flex-1">
+      <form @submit.prevent="submit" class="px-4 flex flex-col gap-5 flex-1">
 
         <!-- Nombre -->
         <div class="grid gap-1.5">

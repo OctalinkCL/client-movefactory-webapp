@@ -8,7 +8,7 @@ import { METRICS } from './constants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
 import ChartPeso from '@/components/chart/ChartPeso.vue'
 import ChartCintura from '@/components/chart/ChartCintura.vue'
@@ -145,14 +145,15 @@ async function submitForm() {
             + Nueva sesión
           </button>
         </SheetTrigger>
-        <SheetContent>
+        <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
           <SheetHeader>
             <SheetTitle>Nueva sesión de seguimiento</SheetTitle>
+            <SheetDescription class="sr-only">Formulario para registrar una nueva sesión de seguimiento de métricas</SheetDescription>
           </SheetHeader>
 
-          <div class="space-y-5 py-2 overflow-y-auto flex-1">
+          <div class="px-4 space-y-5 py-2 overflow-y-auto flex-1">
             <!-- Fecha -->
-            <div class="space-y-1.5">
+            <div class="space-y-1.5 overflow-hidden">
               <label class="text-sm font-medium">Fecha</label>
               <Input v-model="form.date" type="date" />
             </div>
@@ -198,9 +199,10 @@ async function submitForm() {
             </div>
           </div>
 
-          <SheetFooter>
-            <Button variant="outline" @click="resetForm">Cancelar</Button>
+          <SheetFooter class="grid grid-cols-2 gap-4">
+            <Button size="lg" variant="outline" @click="resetForm">Cancelar</Button>
             <Button
+              size="lg"
               @click="submitForm"
               :disabled="!METRICS.some(m => form.measurements[m.key] !== '')"
             >

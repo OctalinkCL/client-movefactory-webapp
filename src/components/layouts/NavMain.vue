@@ -40,7 +40,7 @@ const itemNav = [
         name: 'Alimentos',
         to: 'admin-foods',
         icon: Apple,
-        role: ['admin']
+        role: ['admin', 'nutritionist']
     },
     {
         name: 'Documentos',
