@@ -138,7 +138,7 @@ async function saveProfile() {
                 <div class="px-4 space-y-4  ">
                   <div class="space-y-1.5">
                     <label class="text-sm font-medium">Fecha de nacimiento</label>
-                    <Input v-model="profileForm.birth_date" type="date" />
+                    <Input v-model="profileForm.birth_date" type="date" class="max-w-full" />
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-sm font-medium">Sexo</label>
@@ -158,8 +158,8 @@ async function saveProfile() {
                   </div>
                 </div>
                 <SheetFooter class="grid grid-cols-2 gap-4">
-                  <Button variant="outline" @click="profileSheetOpen = false">Cancelar</Button>
-                  <Button @click="saveProfile">Guardar</Button>
+                  <Button size="lg" variant="outline" @click="profileSheetOpen = false">Cancelar</Button>
+                  <Button size="lg" @click="saveProfile">Guardar</Button>
                 </SheetFooter>
               </SheetContent>
             </Sheet>
