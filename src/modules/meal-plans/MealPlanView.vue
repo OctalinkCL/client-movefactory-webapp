@@ -10,13 +10,13 @@ import { Spinner } from '@/components/ui/spinner'
 import { NativeSelect } from '@/components/ui/native-select'
 import type { MealPlanMoment } from '@/types/meal-plan'
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 // icon
-import { XIcon, PlusIcon } from 'lucide-vue-next'
+import { XIcon, PlusIcon, ArrowLeft } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -129,10 +129,14 @@ async function submitForm() {
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
-    <button class="text-sm text-muted-foreground hover:underline" @click="router.back()">
-      ← Volver
-    </button>
+  <div id="meal-plan-view" class="space-y-4">
+    <!-- header -->
+    <header>
+      <button class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer" @click="router.back()">
+        <ArrowLeft :size="15" />
+        Volver al Paciente
+      </button>
+    </header>
 
     <div class="flex items-center justify-between">
       <div class="space-y-1">
@@ -211,6 +215,8 @@ async function submitForm() {
         <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
           <SheetHeader>
             <SheetTitle>{{ isEditing ? 'Editar momento' : 'Nuevo momento' }}</SheetTitle>
+            <SheetDescription class="sr-only">Formulario para {{ isEditing ? 'editar' : 'crear' }} un momento del plan
+              de alimentación</SheetDescription>
           </SheetHeader>
 
           <div class="px-4 space-y-5 py-2 flex-1 overflow-y-auto">
@@ -309,7 +315,7 @@ async function submitForm() {
             <DialogTitle>¿Eliminar este momento?</DialogTitle>
             <DialogDescription>
               <span class="font-medium text-foreground">{{ deletingMoment?.name ?? deletingMoment?.moment?.name
-              }}</span>
+                }}</span>
               · {{ deletingMoment?.days.length }} día(s) afectado(s)
             </DialogDescription>
           </DialogHeader>
