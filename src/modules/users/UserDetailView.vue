@@ -136,9 +136,9 @@ async function saveProfile() {
                   <SheetTitle>Datos del paciente</SheetTitle>
                 </SheetHeader>
                 <div class="px-4 space-y-4  ">
-                  <div class="space-y-1.5">
+                  <div class="space-y-1.5 overflow-hidden">
                     <label class="text-sm font-medium">Fecha de nacimiento</label>
-                    <Input v-model="profileForm.birth_date" type="date" class="max-w-full" />
+                    <Input v-model="profileForm.birth_date" type="date" />
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-sm font-medium">Sexo</label>
