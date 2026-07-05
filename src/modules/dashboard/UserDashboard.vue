@@ -10,7 +10,7 @@ const { profile } = storeToRefs(useAuthStore())
 
 </script>
 <template>
-  <div id="user-dashboard-page" class="grid gap-4 lg:gap-8">
+  <div id="user-dashboard-page" class="grid gap-4 lg:gap-8 min-w-0">
     <!-- Header -->
     <div class="flex gap-3 items-center">
       <Avatar class="size-12">
@@ -24,9 +24,13 @@ const { profile } = storeToRefs(useAuthStore())
     </div>
 
     <!-- Content -->
-    <div>
+    <div class="grid gap-6">
       <PlanSummary v-if="profile" :userId="profile.id" />
-      <ProgressSummary v-if="profile" :userId="profile.id" />
+
+      <div v-if="profile" class="grid gap-4">
+        <h4 class="text-lg font-medium">Progreso</h4>
+        <ProgressSummary :userId="profile.id" />
+      </div>
     </div>
 
   </div>
