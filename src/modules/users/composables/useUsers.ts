@@ -14,7 +14,7 @@ export function useUsers(role: Profile['role']) {
       .from('profiles')
       .select('*')
       .eq('role', role)
-      .eq('is_active', true)
+      .order('is_active', { ascending: false })
       .order('full_name')
     if (err) error.value = err.message
     else users.value = data ?? []

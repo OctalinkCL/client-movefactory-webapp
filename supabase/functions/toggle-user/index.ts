@@ -11,13 +11,43 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { userId, isActive } = await req.json()
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'No autorizado' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      })
+    }
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
+
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user: caller }, error: callerError } = await supabase.auth.getUser(token)
+    if (callerError || !caller) {
+      return new Response(JSON.stringify({ error: 'No autorizado' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      })
+    }
+
+    const { data: callerProfile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', caller.id)
+      .single()
+
+    if (callerProfile?.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Solo un administrador puede realizar esta acción' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
+      })
+    }
+
+    const { userId, isActive } = await req.json()
 
     const { error: profileError } = await supabase
       .from('profiles')

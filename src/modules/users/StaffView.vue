@@ -69,6 +69,12 @@ async function handleToggle(userId: string, currentActive: boolean) {
                 <AvatarFallback class="text-xs">{{ getInitials(user.full_name) }}</AvatarFallback>
               </Avatar>
               {{ user.full_name }}
+              <span
+                v-if="!user.is_active"
+                class="text-xs px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border"
+              >
+                Suspendido
+              </span>
             </TableCell>
             <TableCell>{{ user.email }}</TableCell>
             <TableCell>{{ user.phone ?? '—' }}</TableCell>
