@@ -63,6 +63,13 @@ export const adminRoutes: RouteRecordRaw[] = [
         meta: { roles: ["admin", "nutritionist"] },
         component: () => import("@/modules/documents/DocumentsView.vue"),
       },
+      // Benefits
+      {
+        path: "benefits",
+        name: "admin-benefits",
+        meta: { roles: ["admin", "nutritionist"] },
+        component: () => import("@/modules/benefits/BenefitsView.vue"),
+      },
     ],
   },
 ];
