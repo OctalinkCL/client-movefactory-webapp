@@ -29,7 +29,10 @@ export function useBenefits() {
       error.value = err.message
       return false
     }
-    await supabase.storage.from('benefits').remove([benefit.photo_path, benefit.logo_path])
+    const { error: storageErr } = await supabase.storage
+      .from('benefits')
+      .remove([benefit.photo_path, benefit.logo_path])
+    if (storageErr) console.error('[useBenefits] no se pudieron borrar las imágenes:', storageErr)
     benefits.value = benefits.value.filter(b => b.id !== benefit.id)
     return true
   }

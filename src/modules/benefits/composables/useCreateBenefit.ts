@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth'
+import { optimizeImage } from '@/lib/imageOptimize'
 
 export interface BenefitFormFields {
   title: string
@@ -22,13 +23,16 @@ export function useCreateBenefit() {
       const userId = authStore.user?.id
       if (!userId) throw new Error('No autenticado')
 
-      const photoPath = `beneficios/${Date.now()}_photo_${photo.name}`
-      const logoPath = `beneficios/${Date.now()}_logo_${logo.name}`
+      const optimizedPhoto = await optimizeImage(photo, { maxWidth: 1600, maxHeight: 1600 })
+      const optimizedLogo = await optimizeImage(logo, { maxWidth: 600, maxHeight: 600, quality: 0.9 })
 
-      const { error: photoError } = await supabase.storage.from('benefits').upload(photoPath, photo)
+      const photoPath = `beneficios/${Date.now()}_photo_${optimizedPhoto.name}`
+      const logoPath = `beneficios/${Date.now()}_logo_${optimizedLogo.name}`
+
+      const { error: photoError } = await supabase.storage.from('benefits').upload(photoPath, optimizedPhoto)
       if (photoError) throw photoError
 
-      const { error: logoError } = await supabase.storage.from('benefits').upload(logoPath, logo)
+      const { error: logoError } = await supabase.storage.from('benefits').upload(logoPath, optimizedLogo)
       if (logoError) throw logoError
 
       const { error: dbError } = await supabase.from('benefits').insert({

@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
+import { optimizeImage } from '@/lib/imageOptimize'
 import type { Benefit } from '@/types/benefit'
 import type { BenefitFormFields } from './useCreateBenefit'
 
@@ -21,14 +22,16 @@ export function useEditBenefit() {
       let logoPath = current.logo_path
 
       if (photo) {
-        photoPath = `beneficios/${Date.now()}_photo_${photo.name}`
-        const { error: photoError } = await supabase.storage.from('benefits').upload(photoPath, photo)
+        const optimizedPhoto = await optimizeImage(photo, { maxWidth: 1600, maxHeight: 1600 })
+        photoPath = `beneficios/${Date.now()}_photo_${optimizedPhoto.name}`
+        const { error: photoError } = await supabase.storage.from('benefits').upload(photoPath, optimizedPhoto)
         if (photoError) throw photoError
       }
 
       if (logo) {
-        logoPath = `beneficios/${Date.now()}_logo_${logo.name}`
-        const { error: logoError } = await supabase.storage.from('benefits').upload(logoPath, logo)
+        const optimizedLogo = await optimizeImage(logo, { maxWidth: 600, maxHeight: 600, quality: 0.9 })
+        logoPath = `beneficios/${Date.now()}_logo_${optimizedLogo.name}`
+        const { error: logoError } = await supabase.storage.from('benefits').upload(logoPath, optimizedLogo)
         if (logoError) throw logoError
       }
 
