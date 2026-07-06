@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useMealPlan } from './composables/useMealPlan'
 import { useMoments } from './composables/useMoments'
 import { Button } from '@/components/ui/button'
@@ -15,10 +15,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 // icon
-import { XIcon, PlusIcon, ArrowLeft } from 'lucide-vue-next'
+import { XIcon, PlusIcon } from 'lucide-vue-next'
 
 const route = useRoute()
-const router = useRouter()
 const userId = route.params.id as string
 
 const { plan, loading, error, fetchOrCreatePlan, createMoment, updateMoment, removeMoment } = useMealPlan()
@@ -128,83 +127,15 @@ async function submitForm() {
 
 <template>
   <div id="meal-plan-view" class="space-y-4">
-    <!-- header -->
-    <header>
-      <button class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer"
-        @click="router.push({ name: 'admin-tracking', params: { id: userId } })">
-        <ArrowLeft :size="15" />
-        Volver al seguimiento
-      </button>
-    </header>
+    <header class="flex items-center justify-between">
+      <h1 class="text-2xl font-semibold">Plan de alimentación</h1>
 
-    <h1 class="text-2xl font-semibold">Plan de alimentación</h1>
-
-    <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-    <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
-
-    <div v-if="plan" class="space-y-4">
-      <!-- Weekly coverage header -->
-      <div class="border rounded-md p-3">
-        <p class="text-xs uppercase tracking-wide text-muted-foreground mb-2">Cobertura semanal</p>
-        <div class="grid grid-cols-7 gap-1">
-          <div v-for="(name, di) in DAY_NAMES" :key="di" class="flex flex-col items-center gap-1">
-            <span class="text-xs font-medium">{{ name }}</span>
-            <span class="text-xs text-muted-foreground">{{ momentsCountForDay(di + 1) }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Moment cards -->
-      <div class="space-y-3">
-        <div v-for="m in plan.meal_plan_moments" :key="m.id" class="border rounded-md p-4 space-y-3">
-          <div class="flex items-start justify-between gap-2">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs border rounded-full px-2 py-0.5 font-medium">{{ m.moment?.name }}</span>
-              </div>
-              <p v-if="m.name" class="font-semibold text-sm">{{ m.name }}</p>
-              <p class="text-xs text-muted-foreground">
-                {{ m.meal_plan_items?.length ?? 0 }} tipos ·
-                {{m.meal_plan_items?.filter(i => i.portion).length ?? 0}} porciones
-              </p>
-            </div>
-            <!-- Day indicators -->
-            <div class="flex gap-1 shrink-0">
-              <span v-for="(label, di) in DAY_LABELS" :key="di"
-                class="w-6 h-6 rounded text-xs flex items-center justify-center font-medium" :class="m.days.includes(di + 1)
-                  ? 'bg-foreground text-background'
-                  : 'bg-muted text-muted-foreground'">{{ label }}</span>
-            </div>
-          </div>
-
-          <!-- Item chips -->
-          <div v-if="m.meal_plan_items?.length" class="flex flex-wrap gap-2">
-            <span v-for="item in m.meal_plan_items" :key="item.id" class="border rounded-full px-2 py-0.5 text-xs">
-              {{ item.food_type }}
-              <span class="text-muted-foreground">×{{ portionLabel(item.portion) }}</span>
-            </span>
-          </div>
-
-          <p v-if="m.note" class="text-xs text-muted-foreground italic">{{ m.note }}</p>
-
-          <div class="flex gap-3">
-            <button class="text-xs text-muted-foreground hover:underline" @click="openEdit(m)">
-              Editar
-            </button>
-            <button class="text-xs text-destructive hover:underline" @click="deletingMoment = m">
-              Eliminar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Create moment dialog -->
       <Sheet v-model:open="dialogOpen">
         <SheetTrigger as-child>
-          <button
-            class="w-full border border-dashed rounded-md py-3 text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
-            + Crear otro momento
-          </button>
+          <Button>
+            <PlusIcon class="size-4" />
+            Nuevo momento
+          </Button>
         </SheetTrigger>
         <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
           <SheetHeader>
@@ -302,6 +233,67 @@ async function submitForm() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+    </header>
+
+    <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
+    <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
+
+    <div v-if="plan" class="space-y-4">
+      <!-- Weekly coverage header -->
+      <div class="border rounded-md p-3">
+        <p class="text-xs uppercase tracking-wide text-muted-foreground mb-2">Cobertura semanal</p>
+        <div class="grid grid-cols-7 gap-1">
+          <div v-for="(name, di) in DAY_NAMES" :key="di" class="flex flex-col items-center gap-1">
+            <span class="text-xs font-medium">{{ name }}</span>
+            <span class="text-xs text-muted-foreground">{{ momentsCountForDay(di + 1) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Moment cards -->
+      <div class="space-y-3">
+        <div v-for="m in plan.meal_plan_moments" :key="m.id" class="border rounded-md p-4 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs border rounded-full px-2 py-0.5 font-medium">{{ m.moment?.name }}</span>
+              </div>
+              <p v-if="m.name" class="font-semibold text-sm">{{ m.name }}</p>
+              <p class="text-xs text-muted-foreground">
+                {{ m.meal_plan_items?.length ?? 0 }} tipos ·
+                {{m.meal_plan_items?.filter(i => i.portion).length ?? 0}} porciones
+              </p>
+            </div>
+            <!-- Day indicators -->
+            <div class="flex gap-1 shrink-0">
+              <span v-for="(label, di) in DAY_LABELS" :key="di"
+                class="w-6 h-6 rounded text-xs flex items-center justify-center font-medium" :class="m.days.includes(di + 1)
+                  ? 'bg-foreground text-background'
+                  : 'bg-muted text-muted-foreground'">{{ label }}</span>
+            </div>
+          </div>
+
+          <!-- Item chips -->
+          <div v-if="m.meal_plan_items?.length" class="flex flex-wrap gap-2">
+            <span v-for="item in m.meal_plan_items" :key="item.id" class="border rounded-full px-2 py-0.5 text-xs">
+              {{ item.food_type }}
+              <span class="text-muted-foreground">×{{ portionLabel(item.portion) }}</span>
+            </span>
+          </div>
+
+          <p v-if="m.note" class="text-xs text-muted-foreground italic">{{ m.note }}</p>
+
+          <div class="flex gap-3">
+            <button class="text-xs text-muted-foreground hover:underline" @click="openEdit(m)">
+              Editar
+            </button>
+            <button class="text-xs text-destructive hover:underline" @click="deletingMoment = m">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Delete confirmation dialog -->
       <Dialog :open="!!deletingMoment" @update:open="v => { if (!v) deletingMoment = null }">
         <DialogContent>

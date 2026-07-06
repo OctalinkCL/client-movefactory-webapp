@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { Weight, CalendarDays, Plus } from 'lucide-vue-next'
 import { useTracking } from './composables/useTracking'
 import { useAuthStore } from '@/stores/auth'
 import { METRICS, getMetric } from './constants'
@@ -9,9 +10,9 @@ import { Input } from '@/components/ui/input'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
-import ChartPeso from '@/components/chart/ChartPeso.vue'
-import ChartCintura from '@/components/chart/ChartCintura.vue'
-import ChartComposicion from '@/components/chart/ChartComposicion.vue'
+import StatCard from '@/modules/dashboard/components/StatCard.vue'
+import WeightTrendCard from '@/modules/dashboard/components/WeightTrendCard.vue'
+import CompositionRings from '@/modules/dashboard/components/CompositionRings.vue'
 
 const route = useRoute()
 const userId = route.params.id as string
@@ -44,6 +45,9 @@ const chartCinturaData = computed(() =>
 const lastFatPct = computed(() => getMeasurement(sessions.value[0], 'fat_pct') ?? undefined)
 const lastMusclePct = computed(() => getMeasurement(sessions.value[0], 'muscle_pct') ?? undefined)
 
+const lastWeight = computed(() => sessions.value[0] ? getMeasurement(sessions.value[0], 'weight') : null)
+const lastSessionDate = computed(() => sessions.value[0] ? formatDate(sessions.value[0].date) : null)
+
 // Sheet form
 const sheetOpen = ref(false)
 const form = reactive({
@@ -73,52 +77,15 @@ async function submitForm() {
 
 <template>
   <div class="space-y-4">
-    <h1 class="text-2xl font-semibold">Seguimiento</h1>
+    <header class="flex items-center justify-between">
+      <h1 class="text-2xl font-semibold">Seguimiento</h1>
 
-    <!-- Gráficas -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <ChartPeso :data="chartPesoData.length ? chartPesoData : undefined" />
-      <ChartCintura :data="chartCinturaData.length ? chartCinturaData : undefined" />
-      <ChartComposicion :fatPct="lastFatPct" :musclePct="lastMusclePct" />
-    </div>
-
-    <!-- Historial -->
-    <div class="space-y-3">
-      <p class="text-sm font-medium">Historial de sesiones</p>
-
-      <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
-
-      <div v-else-if="sessions.length" class="space-y-2">
-        <div
-          v-for="session in sessions"
-          :key="session.id"
-          class="border rounded-md p-3 space-y-2"
-        >
-          <p class="text-sm font-medium">{{ formatDate(session.date) }}</p>
-
-          <div class="flex flex-wrap gap-1.5">
-            <span
-              v-for="m in session.measurements"
-              :key="m.metric"
-              class="text-xs border rounded-full px-2 py-1 bg-muted/40"
-            >
-              <span class="text-muted-foreground">{{ getMetric(m.metric)?.label }}:</span>
-              <span class="font-medium">{{ m.value }} {{ getMetric(m.metric)?.unit }}</span>
-            </span>
-          </div>
-
-          <p v-if="session.notes" class="text-xs text-muted-foreground italic">{{ session.notes }}</p>
-        </div>
-      </div>
-
-      <p v-else class="text-sm text-muted-foreground">Sin sesiones registradas.</p>
-
-      <!-- New session sheet -->
       <Sheet v-model:open="sheetOpen">
         <SheetTrigger as-child>
-          <button class="w-full border border-dashed rounded-md py-3 text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
-            + Nueva sesión
-          </button>
+          <Button>
+            <Plus class="size-4" />
+            Nueva sesión
+          </Button>
         </SheetTrigger>
         <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
           <SheetHeader>
@@ -186,6 +153,68 @@ async function submitForm() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+    </header>
+
+    <!-- Resumen -->
+    <div class="grid grid-cols-2 gap-4">
+      <StatCard
+        :icon="Weight"
+        label="Peso actual"
+        :value="lastWeight != null ? String(lastWeight) : '--'"
+        :suffix="lastWeight != null ? 'kg' : undefined"
+        subtitle="Último registro"
+      />
+      <StatCard
+        :icon="CalendarDays"
+        label="Último control"
+        :value="lastSessionDate ?? 'Sin registros'"
+      />
+    </div>
+
+    <!-- Gráficas -->
+    <WeightTrendCard :data="chartPesoData.length ? chartPesoData : undefined" />
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <WeightTrendCard
+        :data="chartCinturaData.length ? chartCinturaData : undefined"
+        title="Tendencia de cintura"
+        label="Cintura (cm)"
+        color="#3b82f6"
+        empty-message="Aún no hay registros de cintura"
+      />
+      <CompositionRings :fatPct="lastFatPct" :musclePct="lastMusclePct" />
+    </div>
+
+    <!-- Historial -->
+    <div class="space-y-3">
+      <p class="text-sm font-medium">Historial de sesiones</p>
+
+      <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
+
+      <div v-else-if="sessions.length" class="space-y-2">
+        <div
+          v-for="session in sessions"
+          :key="session.id"
+          class="border rounded-md p-3 space-y-2"
+        >
+          <p class="text-sm font-medium">{{ formatDate(session.date) }}</p>
+
+          <div class="flex flex-wrap gap-1.5">
+            <span
+              v-for="m in session.measurements"
+              :key="m.metric"
+              class="text-xs border rounded-full px-2 py-1 bg-muted/40"
+            >
+              <span class="text-muted-foreground">{{ getMetric(m.metric)?.label }}:</span>
+              <span class="font-medium">{{ m.value }} {{ getMetric(m.metric)?.unit }}</span>
+            </span>
+          </div>
+
+          <p v-if="session.notes" class="text-xs text-muted-foreground italic">{{ session.notes }}</p>
+        </div>
+      </div>
+
+      <p v-else class="text-sm text-muted-foreground">Sin sesiones registradas.</p>
     </div>
   </div>
 </template>
