@@ -15,7 +15,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 // icon
-import { XIcon, PlusIcon } from 'lucide-vue-next'
+import { XIcon, PlusIcon, Pencil, Trash2 } from 'lucide-vue-next'
 
 const route = useRoute()
 const userId = route.params.id as string
@@ -240,12 +240,21 @@ async function submitForm() {
 
     <div v-if="plan" class="space-y-4">
       <!-- Weekly coverage header -->
-      <div class="border rounded-md p-3">
-        <p class="text-xs uppercase tracking-wide text-muted-foreground mb-2">Cobertura semanal</p>
-        <div class="grid grid-cols-7 gap-1">
-          <div v-for="(name, di) in DAY_NAMES" :key="di" class="flex flex-col items-center gap-1">
-            <span class="text-xs font-medium">{{ name }}</span>
-            <span class="text-xs text-muted-foreground">{{ momentsCountForDay(di + 1) }}</span>
+      <div class="space-y-2">
+        <p class="text-xs uppercase tracking-wide text-muted-foreground">Cobertura semanal</p>
+        <div class="grid grid-cols-7 gap-2 sm:gap-3">
+          <div
+            v-for="(name, di) in DAY_NAMES"
+            :key="di"
+            class="border rounded-xl p-3 flex flex-col items-center gap-1.5 bg-card"
+          >
+            <p class="text-xs font-medium text-muted-foreground">{{ name }}</p>
+            <p
+              class="text-2xl font-semibold leading-none"
+              :class="momentsCountForDay(di + 1) > 0 ? 'text-foreground' : 'text-muted-foreground/40'"
+            >
+              {{ momentsCountForDay(di + 1) }}
+            </p>
           </div>
         </div>
       </div>
@@ -283,13 +292,15 @@ async function submitForm() {
 
           <p v-if="m.note" class="text-xs text-muted-foreground italic">{{ m.note }}</p>
 
-          <div class="flex gap-3">
-            <button class="text-xs text-muted-foreground hover:underline" @click="openEdit(m)">
+          <div class="flex items-center gap-1 -ml-2.5">
+            <Button size="sm" variant="ghost" @click="openEdit(m)">
+              <Pencil class="size-4" />
               Editar
-            </button>
-            <button class="text-xs text-destructive hover:underline" @click="deletingMoment = m">
+            </Button>
+            <Button size="sm" variant="ghost" class="text-destructive hover:text-destructive" @click="deletingMoment = m">
+              <Trash2 class="size-4" />
               Eliminar
-            </button>
+            </Button>
           </div>
         </div>
       </div>
