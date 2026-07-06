@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
@@ -56,6 +56,10 @@ function reset() {
   selectedUsers.value = []
   userSearch.value = ''
 }
+
+watch(open, (val) => {
+  if (val) reset()
+})
 
 async function submit() {
   if (!file.value || !form.name.trim()) return
@@ -178,8 +182,9 @@ async function submit() {
 
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
 
-        <SheetFooter class="mt-auto">
-          <Button type="submit" class="w-full" :disabled="loading || !canSubmit">
+        <SheetFooter class="grid grid-cols-2 gap-4 px-0 py-4 mt-auto">
+          <Button type="button" size="lg" variant="outline" @click="open = false">Cancelar</Button>
+          <Button type="submit" size="lg" :disabled="loading || !canSubmit">
             {{ loading ? 'Subiendo...' : 'Subir documento' }}
           </Button>
         </SheetFooter>

@@ -132,8 +132,9 @@ async function submit() {
 
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
 
-        <SheetFooter class="mt-auto">
-          <Button type="submit" class="w-full" :disabled="loading || !canSubmit">
+        <SheetFooter class="grid grid-cols-2 gap-4 px-0 py-4 mt-auto">
+          <Button type="button" size="lg" variant="outline" @click="open = false">Cancelar</Button>
+          <Button type="submit" size="lg" :disabled="loading || !canSubmit">
             {{ loading ? 'Guardando...' : 'Guardar cambios' }}
           </Button>
         </SheetFooter>
