@@ -63,7 +63,10 @@ function select(food: Food) {
       <button class="flex items-center gap-0.5 text-sm shrink-0">
         <template v-if="selection?.food">
           <span class="font-medium">{{ selection.food.name }}</span>
-          <span class="text-muted-foreground ml-1">· {{ selection.food.portion_grams }}g</span>
+          <span v-if="selection.food.portion_grams_cooked" class="text-muted-foreground ml-1">
+            · {{ selection.food.portion_grams_cooked }}g cocido
+          </span>
+          <span v-else class="text-muted-foreground ml-1">· {{ selection.food.portion_grams }}g</span>
         </template>
         <span v-else class="text-primary font-medium">Elegir</span>
         <ChevronRight class="size-4 text-muted-foreground" />
@@ -101,6 +104,7 @@ function select(food: Food) {
               <p class="text-sm font-medium">{{ food.name }}</p>
               <p class="text-xs text-muted-foreground">
                 1 porción ≈ {{ food.portion_grams }}g
+                <span v-if="food.portion_grams_cooked"> ({{ food.portion_grams_cooked }}g cocido)</span>
                 <span v-if="food.household_measure"> · {{ food.household_measure }}</span>
               </p>
             </div>
