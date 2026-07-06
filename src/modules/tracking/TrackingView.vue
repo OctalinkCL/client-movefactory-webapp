@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useTracking } from './composables/useTracking'
 import { useAuthStore } from '@/stores/auth'
 import { METRICS, getMetric } from './constants'
@@ -14,7 +14,6 @@ import ChartCintura from '@/components/chart/ChartCintura.vue'
 import ChartComposicion from '@/components/chart/ChartComposicion.vue'
 
 const route = useRoute()
-const router = useRouter()
 const userId = route.params.id as string
 const authStore = useAuthStore()
 
