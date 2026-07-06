@@ -29,31 +29,46 @@ export const adminRoutes: RouteRecordRaw[] = [
         component: () => import("@/modules/users/UsersView.vue"),
       },
       {
-        path: "users/:id/detail",
-        name: "admin-users-detail",
+        path: "users/:id",
         meta: { roles: ["admin", "nutritionist"] },
-        component: () => import("@/modules/users/UserDetailView.vue"),
-      },
-      // Meal_Plan
-      {
-        path: "users/:id/meal-plan",
-        name: "admin-meal-plan",
-        meta: { roles: ["admin", "nutritionist"] },
-        component: () => import("@/modules/meal-plans/MealPlanView.vue"),
+        component: () => import("@/modules/users/UserDetailLayout.vue"),
+        children: [
+          {
+            path: "detail",
+            redirect: (to) => ({ name: "admin-tracking", params: to.params }),
+          },
+          {
+            path: "meal-plan",
+            name: "admin-meal-plan",
+            component: () => import("@/modules/meal-plans/MealPlanView.vue"),
+          },
+          {
+            path: "tracking",
+            name: "admin-tracking",
+            component: () => import("@/modules/tracking/TrackingView.vue"),
+          },
+        ],
       },
       // Foods
       {
         path: "foods",
         name: "admin-foods",
-        meta: { roles: ["admin"] },
+        meta: { roles: ["admin", "nutritionist"] },
         component: () => import("@/modules/foods/FoodsView.vue"),
       },
-      // Tracking
+      // Documents
       {
-        path: "users/:id/tracking",
-        name: "admin-tracking",
+        path: "documents",
+        name: "admin-documents",
         meta: { roles: ["admin", "nutritionist"] },
-        component: () => import("@/modules/tracking/TrackingView.vue"),
+        component: () => import("@/modules/documents/DocumentsView.vue"),
+      },
+      // Benefits
+      {
+        path: "benefits",
+        name: "admin-benefits",
+        meta: { roles: ["admin", "nutritionist"] },
+        component: () => import("@/modules/benefits/BenefitsView.vue"),
       },
     ],
   },

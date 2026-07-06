@@ -19,7 +19,7 @@ const { users, loading, fetchUsers } = useUsers('user')
 const { toggleUser, loading: toggling } = useToggleUser()
 
 function goToDetail(id: string) {
-  router.push({ name: 'admin-users-detail', params: { id } })
+  router.push({ name: 'admin-tracking', params: { id } })
 }
 
 async function handleToggle(userId: string, currentActive: boolean) {
@@ -66,24 +66,22 @@ async function handleToggle(userId: string, currentActive: boolean) {
                 <AvatarFallback class="text-xs" v-else>{{ getInitials(user.full_name) }}</AvatarFallback>
               </Avatar>
               {{ user.full_name }}
+              <span
+                v-if="!user.is_active"
+                class="text-xs px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border"
+              >
+                Suspendido
+              </span>
             </TableCell>
             <TableCell>{{ user.email }}</TableCell>
             <TableCell>{{ user.phone ?? '—' }}</TableCell>
             <TableCell class="text-right">
               <div class="flex items-center justify-end gap-3">
-                <span
-                  class="text-sm hover:underline cursor-pointer"
-                  @click="goToDetail(user.id)"
-                >
+                <span class="text-sm hover:underline cursor-pointer" @click="goToDetail(user.id)">
                   Ver usuario
                 </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  class="text-destructive hover:text-destructive"
-                  :disabled="toggling"
-                  @click="handleToggle(user.id, user.is_active)"
-                >
+                <Button size="sm" variant="ghost" class="text-destructive hover:text-destructive" :disabled="toggling"
+                  @click="handleToggle(user.id, user.is_active)">
                   {{ user.is_active ? 'Suspender' : 'Reactivar' }}
                 </Button>
               </div>

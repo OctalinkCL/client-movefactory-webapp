@@ -1,25 +1,22 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useUser } from '@/modules/users/composables/useUser'
+import { useRoute } from 'vue-router'
 import { useTracking } from './composables/useTracking'
 import { useAuthStore } from '@/stores/auth'
-import { METRICS } from './constants'
+import { METRICS, getMetric } from './constants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
 import ChartPeso from '@/components/chart/ChartPeso.vue'
 import ChartCintura from '@/components/chart/ChartCintura.vue'
 import ChartComposicion from '@/components/chart/ChartComposicion.vue'
 
 const route = useRoute()
-const router = useRouter()
 const userId = route.params.id as string
 const authStore = useAuthStore()
 
-const { user } = useUser(userId)
 const { sessions, loading, fetchSessions, createSession } = useTracking()
 
 onMounted(() => fetchSessions(userId))
@@ -75,17 +72,8 @@ async function submitForm() {
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
-    <button class="text-sm text-muted-foreground hover:underline" @click="router.back()">
-      ← Volver
-    </button>
-
-    <div class="flex items-center justify-between">
-      <div class="space-y-1">
-        <h1 class="text-2xl font-semibold">Seguimiento</h1>
-        <p v-if="user" class="text-muted-foreground text-sm">{{ user.full_name }}</p>
-      </div>
-    </div>
+  <div class="space-y-4">
+    <h1 class="text-2xl font-semibold">Seguimiento</h1>
 
     <!-- Gráficas -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -100,40 +88,27 @@ async function submitForm() {
 
       <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
 
-      <div v-else-if="sessions.length" class="border rounded-md overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b bg-muted/40">
-              <th class="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Fecha</th>
-              <th
-                v-for="metric in METRICS"
-                :key="metric.key"
-                class="text-right px-3 py-2 font-medium text-muted-foreground whitespace-nowrap"
-              >
-                {{ metric.label }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="session in sessions"
-              :key="session.id"
-              class="border-b last:border-0 hover:bg-muted/20 transition-colors"
+      <div v-else-if="sessions.length" class="space-y-2">
+        <div
+          v-for="session in sessions"
+          :key="session.id"
+          class="border rounded-md p-3 space-y-2"
+        >
+          <p class="text-sm font-medium">{{ formatDate(session.date) }}</p>
+
+          <div class="flex flex-wrap gap-1.5">
+            <span
+              v-for="m in session.measurements"
+              :key="m.metric"
+              class="text-xs border rounded-full px-2 py-1 bg-muted/40"
             >
-              <td class="px-3 py-2 whitespace-nowrap">{{ formatDate(session.date) }}</td>
-              <td
-                v-for="metric in METRICS"
-                :key="metric.key"
-                class="px-3 py-2 text-right text-muted-foreground whitespace-nowrap"
-              >
-                {{ session.measurements?.find(m => m.metric === metric.key)?.value ?? '—' }}
-                <span v-if="session.measurements?.find(m => m.metric === metric.key)" class="text-xs">
-                  {{ metric.unit }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              <span class="text-muted-foreground">{{ getMetric(m.metric)?.label }}:</span>
+              <span class="font-medium">{{ m.value }} {{ getMetric(m.metric)?.unit }}</span>
+            </span>
+          </div>
+
+          <p v-if="session.notes" class="text-xs text-muted-foreground italic">{{ session.notes }}</p>
+        </div>
       </div>
 
       <p v-else class="text-sm text-muted-foreground">Sin sesiones registradas.</p>
@@ -145,14 +120,15 @@ async function submitForm() {
             + Nueva sesión
           </button>
         </SheetTrigger>
-        <SheetContent>
+        <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
           <SheetHeader>
             <SheetTitle>Nueva sesión de seguimiento</SheetTitle>
+            <SheetDescription class="sr-only">Formulario para registrar una nueva sesión de seguimiento de métricas</SheetDescription>
           </SheetHeader>
 
-          <div class="space-y-5 py-2 overflow-y-auto flex-1">
+          <div class="px-4 space-y-5 py-2 overflow-y-auto flex-1">
             <!-- Fecha -->
-            <div class="space-y-1.5">
+            <div class="space-y-1.5 overflow-hidden">
               <label class="text-sm font-medium">Fecha</label>
               <Input v-model="form.date" type="date" />
             </div>
@@ -198,9 +174,10 @@ async function submitForm() {
             </div>
           </div>
 
-          <SheetFooter>
-            <Button variant="outline" @click="resetForm">Cancelar</Button>
+          <SheetFooter class="grid grid-cols-2 gap-4">
+            <Button size="lg" variant="outline" @click="resetForm">Cancelar</Button>
             <Button
+              size="lg"
               @click="submitForm"
               :disabled="!METRICS.some(m => form.measurements[m.key] !== '')"
             >

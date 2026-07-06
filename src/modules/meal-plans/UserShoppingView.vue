@@ -26,11 +26,13 @@ const shoppingList = computed((): ShoppingCategory[] => {
 
   for (const sel of selections.value) {
     if (!sel.food) continue
+    const portions = Number(sel.meal_plan_item?.portion ?? 1)
+    const grams = portions * sel.food.portion_grams
     const existing = byFood.get(sel.food_id)
     if (existing) {
-      existing.totalGrams += sel.food.portion_grams
+      existing.totalGrams += grams
     } else {
-      byFood.set(sel.food_id, { food: sel.food, totalGrams: sel.food.portion_grams })
+      byFood.set(sel.food_id, { food: sel.food, totalGrams: grams })
     }
   }
 

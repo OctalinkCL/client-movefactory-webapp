@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import { NativeSelect } from '@/components/ui/native-select'
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
 } from '@/components/ui/sheet'
 
 const { foods, categories, loading, fetchFoods, fetchCategories, createFood, updateFood } = useFoods()
@@ -111,12 +112,13 @@ async function submit() {
     </div>
 
     <Sheet v-model:open="sheetOpen">
-      <SheetContent>
+      <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
         <SheetHeader>
           <SheetTitle>{{ isEditing ? 'Editar alimento' : 'Nuevo alimento' }}</SheetTitle>
+          <SheetDescription class="sr-only">Formulario para {{ isEditing ? 'editar' : 'agregar' }} un alimento al listado maestro</SheetDescription>
         </SheetHeader>
 
-        <div class="space-y-4 py-2 overflow-y-auto flex-1">
+        <div class="px-4 space-y-4 py-2 overflow-y-auto flex-1">
           <div class="space-y-1.5">
             <label class="text-sm font-medium">Nombre <span class="text-destructive">*</span></label>
             <Input v-model="form.name" placeholder="Ej: Pechuga de pollo" />
@@ -124,10 +126,10 @@ async function submit() {
 
           <div class="space-y-1.5">
             <label class="text-sm font-medium">Categoría <span class="text-destructive">*</span></label>
-            <select v-model="form.category_id" class="w-full border rounded-md px-3 py-2 text-sm bg-background">
+            <NativeSelect v-model="form.category_id">
               <option value="" disabled>Selecciona una categoría...</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-            </select>
+            </NativeSelect>
           </div>
 
           <div class="space-y-1.5">
@@ -146,9 +148,9 @@ async function submit() {
           </div>
         </div>
 
-        <SheetFooter>
-          <Button variant="outline" @click="sheetOpen = false">Cancelar</Button>
-          <Button @click="submit" :disabled="!form.name || !form.category_id || !form.portion_grams">
+        <SheetFooter class="grid grid-cols-2 gap-4">
+          <Button size="lg" variant="outline" @click="sheetOpen = false">Cancelar</Button>
+          <Button size="lg" @click="submit" :disabled="!form.name || !form.category_id || !form.portion_grams">
             {{ isEditing ? 'Guardar cambios' : 'Guardar' }}
           </Button>
         </SheetFooter>

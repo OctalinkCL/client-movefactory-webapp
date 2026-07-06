@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useSidebar, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
-import { Home, UserKey, Users, Apple } from 'lucide-vue-next'
+import { Home, UserKey, Users, Apple, FileText, Gift } from 'lucide-vue-next'
 
 const { role } = storeToRefs(useAuthStore())
 const route = useRoute()
@@ -40,7 +40,19 @@ const itemNav = [
         name: 'Alimentos',
         to: 'admin-foods',
         icon: Apple,
-        role: ['admin']
+        role: ['admin', 'nutritionist']
+    },
+    {
+        name: 'Documentos',
+        to: 'admin-documents',
+        icon: FileText,
+        role: ['admin', 'nutritionist']
+    },
+    {
+        name: 'Beneficios',
+        to: 'admin-benefits',
+        icon: Gift,
+        role: ['admin', 'nutritionist']
     },
 ]
 
@@ -61,7 +73,7 @@ function handleNavClick(to: string) {
             <SidebarMenu class="gap-1">
                 <SidebarMenuItem v-for="item in filteredNav" :key="item.to">
                     <SidebarMenuButton :is-active="route.name === item.to" @click="handleNavClick(item.to)"
-                        class="cursor-pointer">
+                        class="cursor-pointer h-9 data-[active=true]:bg-black data-[active=true]:text-white">
                         <component :is="item.icon" v-if="item.icon" />
                         <span>{{ item.name }}</span>
                     </SidebarMenuButton>

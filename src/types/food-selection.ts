@@ -8,4 +8,5 @@ export interface UserFoodSelection {
   day_of_week: number
   created_at: string
   food?: Food
+  meal_plan_item?: { portion: string | null }
 }
