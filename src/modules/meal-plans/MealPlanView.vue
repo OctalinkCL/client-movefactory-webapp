@@ -44,6 +44,14 @@ function portionLabel(value: string | null) {
   return PORTION_OPTIONS.find(p => p.value === value)?.label ?? value
 }
 
+function totalPortions(items?: { portion: string | null }[]) {
+  return items?.reduce((sum, i) => sum + (i.portion ? parseInt(i.portion, 10) || 0 : 0), 0) ?? 0
+}
+
+function totalFormPortions(items: { foodType: string; portion: string }[]) {
+  return items.reduce((sum, i) => sum + (i.foodType && i.portion && i.portion !== 'libre' ? parseInt(i.portion, 10) || 0 : 0), 0)
+}
+
 function momentsCountForDay(day: number) {
   return plan.value?.meal_plan_moments?.filter(m => m.days.includes(day)).length ?? 0
 }
@@ -166,7 +174,7 @@ async function submitForm() {
                 <label class="text-sm font-medium">Composición</label>
                 <span class="text-xs text-muted-foreground">
                   {{form.items.filter(i => i.foodType).length}} tipos ·
-                  {{form.items.filter(i => i.foodType && i.portion && i.portion !== 'libre').length}} porciones
+                  {{ totalFormPortions(form.items) }} porciones
                 </span>
               </div>
 
@@ -270,7 +278,7 @@ async function submitForm() {
               <p v-if="m.name" class="font-semibold text-sm">{{ m.name }}</p>
               <p class="text-xs text-muted-foreground">
                 {{ m.meal_plan_items?.length ?? 0 }} tipos ·
-                {{m.meal_plan_items?.filter(i => i.portion).length ?? 0}} porciones
+                {{ totalPortions(m.meal_plan_items) }} porciones
               </p>
             </div>
             <!-- Day indicators -->
@@ -292,12 +300,12 @@ async function submitForm() {
 
           <p v-if="m.note" class="text-xs text-muted-foreground italic">{{ m.note }}</p>
 
-          <div class="flex items-center gap-1 -ml-2.5">
-            <Button size="sm" variant="ghost" @click="openEdit(m)">
+          <div class="flex items-center gap-2">
+            <Button size="sm" variant="secondary" class="cursor-pointer" @click="openEdit(m)">
               <Pencil class="size-4" />
               Editar
             </Button>
-            <Button size="sm" variant="ghost" class="text-destructive hover:text-destructive" @click="deletingMoment = m">
+            <Button size="sm" variant="destructive" class="cursor-pointer" @click="deletingMoment = m">
               <Trash2 class="size-4" />
               Eliminar
             </Button>
