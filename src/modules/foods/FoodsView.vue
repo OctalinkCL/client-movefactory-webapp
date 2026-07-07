@@ -12,6 +12,7 @@ import { NativeSelect } from '@/components/ui/native-select'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
 } from '@/components/ui/sheet'
+import { Plus } from 'lucide-vue-next'
 
 const { foods, categories, loading, fetchFoods, fetchCategories, createFood, updateFood } = useFoods()
 
@@ -71,7 +72,10 @@ async function submit() {
         <h1 class="text-xl font-medium">Alimentos</h1>
         <p class="text-sm text-muted-foreground">Listado maestro de alimentos y porciones.</p>
       </div>
-      <Button size="sm" @click="openCreate">Agregar alimento</Button>
+      <Button @click="openCreate">
+        <Plus class="size-4" />
+        Agregar alimento
+      </Button>
     </header>
 
     <div v-if="loading" class="grid gap-2">
