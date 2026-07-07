@@ -28,6 +28,8 @@ const form = reactive({
   portion_grams: '',
   portion_grams_cooked: '',
   household_measure: '',
+  purchase_mode: 'gramos' as 'gramos' | 'unidad',
+  units_per_portion: '',
 })
 
 function openCreate() {
@@ -37,6 +39,8 @@ function openCreate() {
   form.portion_grams = ''
   form.portion_grams_cooked = ''
   form.household_measure = ''
+  form.purchase_mode = 'gramos'
+  form.units_per_portion = ''
   sheetOpen.value = true
 }
 
@@ -47,16 +51,21 @@ function openEdit(food: Food) {
   form.portion_grams = food.portion_grams.toString()
   form.portion_grams_cooked = food.portion_grams_cooked?.toString() ?? ''
   form.household_measure = food.household_measure ?? ''
+  form.purchase_mode = food.is_unit_based ? 'unidad' : 'gramos'
+  form.units_per_portion = food.units_per_portion?.toString() ?? ''
   sheetOpen.value = true
 }
 
 async function submit() {
+  const isUnitBased = form.purchase_mode === 'unidad'
   const fields = {
     name: form.name,
     category_id: form.category_id,
     portion_grams: parseFloat(form.portion_grams),
     portion_grams_cooked: form.portion_grams_cooked ? parseFloat(form.portion_grams_cooked) : null,
     household_measure: form.household_measure || null,
+    is_unit_based: isUnitBased,
+    units_per_portion: isUnitBased && form.units_per_portion ? parseFloat(form.units_per_portion) : null,
   }
   const ok = isEditing.value
     ? await updateFood(editingId.value!, fields)
@@ -91,6 +100,7 @@ async function submit() {
             <TableHead class="text-right">Porción (g)</TableHead>
             <TableHead class="text-right">Cocido (g)</TableHead>
             <TableHead>Medida casera</TableHead>
+            <TableHead>Compra</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
@@ -105,6 +115,9 @@ async function submit() {
             <TableCell class="text-right">{{ food.portion_grams }}</TableCell>
             <TableCell class="text-right text-muted-foreground">{{ food.portion_grams_cooked ?? '—' }}</TableCell>
             <TableCell class="text-muted-foreground">{{ food.household_measure ?? '—' }}</TableCell>
+            <TableCell class="text-muted-foreground">
+              {{ food.is_unit_based ? `${food.units_per_portion ?? '?'} un/porción` : '—' }}
+            </TableCell>
             <TableCell class="text-right">
               <button class="text-xs text-muted-foreground hover:underline" @click="openEdit(food)">
                 Editar
@@ -150,11 +163,29 @@ async function submit() {
             <label class="text-sm font-medium">Medida casera <span class="text-muted-foreground text-xs font-normal">(opcional)</span></label>
             <Input v-model="form.household_measure" placeholder="Ej: 1 palma de la mano" />
           </div>
+
+          <div class="space-y-1.5">
+            <label class="text-sm font-medium">Se compra por <span class="text-muted-foreground text-xs font-normal">(solo afecta la lista de compras)</span></label>
+            <NativeSelect v-model="form.purchase_mode">
+              <option value="gramos">Gramos</option>
+              <option value="unidad">Unidad</option>
+            </NativeSelect>
+          </div>
+
+          <div class="space-y-1.5" v-if="form.purchase_mode === 'unidad'">
+            <label class="text-sm font-medium">Unidades por porción <span class="text-destructive">*</span></label>
+            <Input v-model="form.units_per_portion" type="number" step="1" placeholder="Ej: 2" />
+          </div>
         </div>
 
         <SheetFooter class="grid grid-cols-2 gap-4">
           <Button size="lg" variant="outline" @click="sheetOpen = false">Cancelar</Button>
-          <Button size="lg" @click="submit" :disabled="!form.name || !form.category_id || !form.portion_grams">
+          <Button
+            size="lg"
+            @click="submit"
+            :disabled="!form.name || !form.category_id || !form.portion_grams
+              || (form.purchase_mode === 'unidad' && !form.units_per_portion)"
+          >
             {{ isEditing ? 'Guardar cambios' : 'Guardar' }}
           </Button>
         </SheetFooter>

@@ -18,7 +18,7 @@ onMounted(() => {
   if (profile.value) fetchAll(profile.value.id)
 })
 
-interface ShoppingItem { food: Food; totalGrams: number }
+interface ShoppingItem { food: Food; totalGrams: number; totalUnits: number }
 interface ShoppingCategory { name: string; items: ShoppingItem[]; totalGrams: number }
 
 const shoppingList = computed((): ShoppingCategory[] => {
@@ -27,13 +27,13 @@ const shoppingList = computed((): ShoppingCategory[] => {
   for (const sel of selections.value) {
     if (!sel.food) continue
     const portions = Number(sel.meal_plan_item?.portion ?? 1)
-    const grams = portions * sel.food.portion_grams
-    const existing = byFood.get(sel.food_id)
-    if (existing) {
-      existing.totalGrams += grams
+    const existing = byFood.get(sel.food_id) ?? { food: sel.food, totalGrams: 0, totalUnits: 0 }
+    if (sel.food.is_unit_based) {
+      existing.totalUnits += portions * (sel.food.units_per_portion ?? 1)
     } else {
-      byFood.set(sel.food_id, { food: sel.food, totalGrams: grams })
+      existing.totalGrams += portions * sel.food.portion_grams
     }
+    byFood.set(sel.food_id, existing)
   }
 
   const byCategory = new Map<string, ShoppingCategory>()
@@ -64,6 +64,12 @@ function formatWeight(grams: number): string {
   return grams >= 1000
     ? (grams / 1000).toFixed(2) + ' kg'
     : grams + ' g'
+}
+
+function formatQuantity(item: ShoppingItem): string {
+  if (!item.food.is_unit_based) return formatWeight(item.totalGrams)
+  const units = Math.ceil(item.totalUnits)
+  return `${units} ${units === 1 ? 'unidad' : 'unidades'}`
 }
 </script>
 
@@ -122,7 +128,7 @@ function formatWeight(grams: number): string {
               class="flex items-center justify-between px-4 py-3.5"
             >
               <p class="text-sm font-medium">{{ item.food.name }}</p>
-              <p class="text-sm font-semibold">{{ formatWeight(item.totalGrams) }}</p>
+              <p class="text-sm font-semibold">{{ formatQuantity(item) }}</p>
             </div>
           </div>
         </div>
