@@ -5,6 +5,7 @@ import { Weight, CalendarDays, Plus, Pencil, Trash2 } from 'lucide-vue-next'
 import { useTracking } from './composables/useTracking'
 import { useAuthStore } from '@/stores/auth'
 import { METRICS, getMetric } from './constants'
+import { formatDateDisplay as formatDate, todayISO } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -21,10 +22,6 @@ const authStore = useAuthStore()
 const { sessions, loading, fetchSessions, createSession, updateSession, deleteSession } = useTracking()
 
 onMounted(() => fetchSessions(userId))
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
-}
 
 function getMeasurement(session: typeof sessions.value[number] | undefined, metric: string) {
   return session?.measurements?.find(m => m.metric === metric)?.value ?? null
@@ -52,13 +49,13 @@ const lastSessionDate = computed(() => sessions.value[0] ? formatDate(sessions.v
 const sheetOpen = ref(false)
 const editingSessionId = ref<string | null>(null)
 const form = reactive({
-  date: new Date().toISOString().slice(0, 10),
+  date: todayISO(),
   notes: '',
   measurements: Object.fromEntries(METRICS.map(m => [m.key, ''])) as Record<string, string>,
 })
 
 function resetForm() {
-  form.date = new Date().toISOString().slice(0, 10)
+  form.date = todayISO()
   form.notes = ''
   METRICS.forEach(m => { form.measurements[m.key] = '' })
   editingSessionId.value = null
