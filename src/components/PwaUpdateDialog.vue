@@ -10,7 +10,16 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
-const { needRefresh, updateServiceWorker } = useRegisterSW()
+const { needRefresh, updateServiceWorker } = useRegisterSW({
+  onRegisteredSW(_swUrl, registration) {
+    if (!registration) return
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        registration.update()
+      }
+    })
+  },
+})
 
 function dismiss() {
   needRefresh.value = false
