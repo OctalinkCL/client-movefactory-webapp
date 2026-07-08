@@ -21,7 +21,7 @@ function getMeasurement(session: typeof sessions.value[number], metric: string) 
 const weightData = computed(() =>
   [...sessions.value].reverse()
     .filter(s => getMeasurement(s, 'weight') !== null)
-    .map(s => ({ fecha: s.date.slice(0, 7), valor: getMeasurement(s, 'weight') as number }))
+    .map(s => ({ fecha: s.date.slice(0, 10), valor: getMeasurement(s, 'weight') as number }))
     .slice(-6)
 )
 

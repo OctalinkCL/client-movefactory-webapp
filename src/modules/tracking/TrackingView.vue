@@ -30,14 +30,14 @@ function getMeasurement(session: typeof sessions.value[number] | undefined, metr
 const chartPesoData = computed(() =>
   [...sessions.value].reverse()
     .filter(s => getMeasurement(s, 'weight') !== null)
-    .map(s => ({ fecha: s.date.slice(0, 7), valor: getMeasurement(s, 'weight') as number }))
+    .map(s => ({ fecha: s.date.slice(0, 10), valor: getMeasurement(s, 'weight') as number }))
     .slice(-6)
 )
 
 const chartCinturaData = computed(() =>
   [...sessions.value].reverse()
     .filter(s => getMeasurement(s, 'waist') !== null)
-    .map(s => ({ fecha: s.date.slice(0, 7), valor: getMeasurement(s, 'waist') as number }))
+    .map(s => ({ fecha: s.date.slice(0, 10), valor: getMeasurement(s, 'waist') as number }))
     .slice(-6)
 )
 
