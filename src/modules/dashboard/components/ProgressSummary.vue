@@ -21,12 +21,13 @@ function getMeasurement(session: typeof sessions.value[number], metric: string) 
 const weightData = computed(() =>
   [...sessions.value].reverse()
     .filter(s => getMeasurement(s, 'weight') !== null)
-    .map(s => ({ fecha: s.date.slice(0, 7), valor: getMeasurement(s, 'weight') as number }))
+    .map(s => ({ fecha: s.date.slice(0, 10), valor: getMeasurement(s, 'weight') as number }))
     .slice(-6)
 )
 
 function formatSessionDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: '2-digit' })
+  const [y, m, d] = iso.slice(0, 10).split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: '2-digit' })
 }
 
 const lastWeight = computed(() => sessions.value[0] ? getMeasurement(sessions.value[0], 'weight') : null)

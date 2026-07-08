@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { VisXYContainer, VisArea, VisAxis } from '@unovis/vue'
+import { VisXYContainer, VisArea, VisAxis, VisScatter } from '@unovis/vue'
 import { ChartContainer } from '@/components/ui/chart'
 import type { ChartConfig } from '@/components/ui/chart'
 
@@ -26,27 +26,38 @@ const config = computed<ChartConfig>(() => ({
 const x = (_: unknown, i: number) => i
 const y = (d: DataPoint) => d.valor
 
+const unit = computed(() => props.label.match(/\(([^)]+)\)/)?.[1] ?? '')
+const titleWithUnit = computed(() => unit.value ? `${props.title} (${unit.value})` : props.title)
+const scatterLabel = (d: DataPoint) => String(d.valor)
+
 function formatFecha(fecha: string) {
-  const [year, month] = fecha.split('-')
-  return `${month}/${year.slice(2)}`
+  const [year, month, day] = fecha.slice(0, 10).split('-').map(Number)
+  const monthShort = new Date(year, month - 1, day).toLocaleDateString('es-CL', { month: 'short' }).replace('.', '')
+  return `${day}-${monthShort}`
 }
 
-const xTicks = (_: unknown, i: number) => {
-  const fecha = props.data?.[i]?.fecha
+// Fuerza los ticks a caer exactamente en los índices de los datos, para que
+// el último punto siempre quede alineado al borde derecho del gráfico.
+const xTickValues = computed(() => props.data?.map((_, i) => i) ?? [])
+const xDomain = computed<[number, number]>(() => [0, Math.max((props.data?.length ?? 1) - 1, 0)])
+
+const xTicks = (tick: number) => {
+  const fecha = props.data?.[tick]?.fecha
   return fecha ? formatFecha(fecha) : ''
 }
 </script>
 
 <template>
   <div class="border rounded-xl p-4 bg-card min-w-0">
-    <p class="text-sm font-medium mb-3">{{ title }}</p>
+    <p class="text-sm font-medium mb-3">{{ titleWithUnit }}</p>
     <div class="h-48 min-w-0">
       <template v-if="props.data?.length">
         <ChartContainer :config="config">
           <template #default="{ id }">
-            <VisXYContainer :data="props.data" :id="id">
+            <VisXYContainer :data="props.data" :id="id" :xDomain="xDomain">
               <VisArea :x="x" :y="y" :color="color" :opacity="0.18" :line="true" :lineColor="color" :lineWidth="2.5" />
-              <VisAxis type="x" :tickFormat="xTicks" :numTicks="props.data.length" />
+              <VisScatter :x="x" :y="y" :color="color" :size="6" :label="scatterLabel" labelPosition="top" />
+              <VisAxis type="x" :tickFormat="xTicks" :tickValues="xTickValues" />
             </VisXYContainer>
           </template>
         </ChartContainer>
