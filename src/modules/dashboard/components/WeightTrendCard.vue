@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { VisXYContainer, VisArea, VisAxis } from '@unovis/vue'
+import { VisXYContainer, VisArea, VisAxis, VisScatter } from '@unovis/vue'
 import { ChartContainer } from '@/components/ui/chart'
 import type { ChartConfig } from '@/components/ui/chart'
 
@@ -51,6 +51,7 @@ const xTicks = (tick: number) => {
           <template #default="{ id }">
             <VisXYContainer :data="props.data" :id="id" :xDomain="xDomain">
               <VisArea :x="x" :y="y" :color="color" :opacity="0.18" :line="true" :lineColor="color" :lineWidth="2.5" />
+              <VisScatter :x="x" :y="y" :color="color" :size="6" />
               <VisAxis type="x" :tickFormat="xTicks" :tickValues="xTickValues" />
             </VisXYContainer>
           </template>
