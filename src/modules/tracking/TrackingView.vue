@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { Weight, CalendarDays, Plus } from 'lucide-vue-next'
+import { Weight, CalendarDays, Plus, Pencil } from 'lucide-vue-next'
 import { useTracking } from './composables/useTracking'
 import { useAuthStore } from '@/stores/auth'
 import { METRICS, getMetric } from './constants'
@@ -18,7 +18,7 @@ const route = useRoute()
 const userId = route.params.id as string
 const authStore = useAuthStore()
 
-const { sessions, loading, fetchSessions, createSession } = useTracking()
+const { sessions, loading, fetchSessions, createSession, updateSession } = useTracking()
 
 onMounted(() => fetchSessions(userId))
 
@@ -50,6 +50,7 @@ const lastSessionDate = computed(() => sessions.value[0] ? formatDate(sessions.v
 
 // Sheet form
 const sheetOpen = ref(false)
+const editingSessionId = ref<string | null>(null)
 const form = reactive({
   date: new Date().toISOString().slice(0, 10),
   notes: '',
@@ -60,7 +61,19 @@ function resetForm() {
   form.date = new Date().toISOString().slice(0, 10)
   form.notes = ''
   METRICS.forEach(m => { form.measurements[m.key] = '' })
+  editingSessionId.value = null
   sheetOpen.value = false
+}
+
+function openEditSession(session: typeof sessions.value[number]) {
+  editingSessionId.value = session.id
+  form.date = session.date.slice(0, 10)
+  form.notes = session.notes ?? ''
+  METRICS.forEach(m => {
+    const value = getMeasurement(session, m.key)
+    form.measurements[m.key] = value !== null ? String(value) : ''
+  })
+  sheetOpen.value = true
 }
 
 async function submitForm() {
@@ -70,7 +83,11 @@ async function submitForm() {
 
   if (!filled.length) return
 
-  await createSession(userId, authStore.profile!.id, form.date, form.notes, filled)
+  if (editingSessionId.value) {
+    await updateSession(editingSessionId.value, form.date, form.notes, filled)
+  } else {
+    await createSession(userId, authStore.profile!.id, form.date, form.notes, filled)
+  }
   resetForm()
 }
 </script>
@@ -80,17 +97,17 @@ async function submitForm() {
     <header class="flex items-center justify-between">
       <h1 class="text-2xl font-semibold">Seguimiento</h1>
 
-      <Sheet v-model:open="sheetOpen">
+      <Sheet v-model:open="sheetOpen" @update:open="(open) => !open && resetForm()">
         <SheetTrigger as-child>
-          <Button>
+          <Button @click="editingSessionId = null">
             <Plus class="size-4" />
             Nueva sesión
           </Button>
         </SheetTrigger>
         <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
           <SheetHeader>
-            <SheetTitle>Nueva sesión de seguimiento</SheetTitle>
-            <SheetDescription class="sr-only">Formulario para registrar una nueva sesión de seguimiento de métricas</SheetDescription>
+            <SheetTitle>{{ editingSessionId ? 'Editar sesión de seguimiento' : 'Nueva sesión de seguimiento' }}</SheetTitle>
+            <SheetDescription class="sr-only">Formulario para {{ editingSessionId ? 'editar una' : 'registrar una nueva' }} sesión de seguimiento de métricas</SheetDescription>
           </SheetHeader>
 
           <div class="px-4 space-y-5 py-2 overflow-y-auto flex-1">
@@ -148,7 +165,7 @@ async function submitForm() {
               @click="submitForm"
               :disabled="!METRICS.some(m => form.measurements[m.key] !== '')"
             >
-              Guardar sesión
+              {{ editingSessionId ? 'Guardar cambios' : 'Guardar sesión' }}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -197,7 +214,12 @@ async function submitForm() {
           :key="session.id"
           class="border rounded-md p-3 space-y-2"
         >
-          <p class="text-sm font-medium">{{ formatDate(session.date) }}</p>
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium">{{ formatDate(session.date) }}</p>
+            <Button variant="ghost" size="icon" class="size-7" @click="openEditSession(session)">
+              <Pencil class="size-3.5" />
+            </Button>
+          </div>
 
           <div class="flex flex-wrap gap-1.5">
             <span

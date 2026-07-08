@@ -46,5 +46,42 @@ export function useTracking() {
     sessions.value.unshift({ ...session, measurements: measurements.map(m => ({ ...m, id: '', session_id: session.id, created_at: '' })) })
   }
 
-  return { sessions, loading, error, fetchSessions, createSession }
+  async function updateSession(
+    sessionId: string,
+    date: string,
+    notes: string,
+    measurements: { metric: string; value: number }[]
+  ) {
+    const { data: session, error: err } = await supabase
+      .from('tracking_sessions')
+      .update({ date, notes: notes || null })
+      .eq('id', sessionId)
+      .select()
+      .single()
+
+    if (err) { error.value = err.message; return }
+
+    const { error: delErr } = await supabase
+      .from('tracking_measurements')
+      .delete()
+      .eq('session_id', sessionId)
+    if (delErr) { error.value = delErr.message; return }
+
+    if (measurements.length) {
+      const { error: itemErr } = await supabase
+        .from('tracking_measurements')
+        .insert(measurements.map(m => ({ session_id: sessionId, metric: m.metric, value: m.value })))
+      if (itemErr) { error.value = itemErr.message; return }
+    }
+
+    const index = sessions.value.findIndex(s => s.id === sessionId)
+    if (index !== -1) {
+      sessions.value[index] = {
+        ...session,
+        measurements: measurements.map(m => ({ ...m, id: '', session_id: sessionId, created_at: '' })),
+      }
+    }
+  }
+
+  return { sessions, loading, error, fetchSessions, createSession, updateSession }
 }
