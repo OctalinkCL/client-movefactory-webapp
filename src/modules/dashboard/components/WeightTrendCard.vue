@@ -31,8 +31,13 @@ function formatFecha(fecha: string) {
   return `${month}/${year.slice(2)}`
 }
 
-const xTicks = (_: unknown, i: number) => {
-  const fecha = props.data?.[i]?.fecha
+// Fuerza los ticks a caer exactamente en los índices de los datos, para que
+// el último punto siempre quede alineado al borde derecho del gráfico.
+const xTickValues = computed(() => props.data?.map((_, i) => i) ?? [])
+const xDomain = computed<[number, number]>(() => [0, Math.max((props.data?.length ?? 1) - 1, 0)])
+
+const xTicks = (tick: number) => {
+  const fecha = props.data?.[tick]?.fecha
   return fecha ? formatFecha(fecha) : ''
 }
 </script>
@@ -44,9 +49,9 @@ const xTicks = (_: unknown, i: number) => {
       <template v-if="props.data?.length">
         <ChartContainer :config="config">
           <template #default="{ id }">
-            <VisXYContainer :data="props.data" :id="id">
+            <VisXYContainer :data="props.data" :id="id" :xDomain="xDomain">
               <VisArea :x="x" :y="y" :color="color" :opacity="0.18" :line="true" :lineColor="color" :lineWidth="2.5" />
-              <VisAxis type="x" :tickFormat="xTicks" :numTicks="props.data.length" />
+              <VisAxis type="x" :tickFormat="xTicks" :tickValues="xTickValues" />
             </VisXYContainer>
           </template>
         </ChartContainer>
