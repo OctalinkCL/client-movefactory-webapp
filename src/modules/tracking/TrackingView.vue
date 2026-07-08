@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { Weight, CalendarDays, Plus, Pencil } from 'lucide-vue-next'
+import { Weight, CalendarDays, Plus, Pencil, Trash2 } from 'lucide-vue-next'
 import { useTracking } from './composables/useTracking'
 import { useAuthStore } from '@/stores/auth'
 import { METRICS, getMetric } from './constants'
@@ -18,7 +18,7 @@ const route = useRoute()
 const userId = route.params.id as string
 const authStore = useAuthStore()
 
-const { sessions, loading, fetchSessions, createSession, updateSession } = useTracking()
+const { sessions, loading, fetchSessions, createSession, updateSession, deleteSession } = useTracking()
 
 onMounted(() => fetchSessions(userId))
 
@@ -74,6 +74,11 @@ function openEditSession(session: typeof sessions.value[number]) {
     form.measurements[m.key] = value !== null ? String(value) : ''
   })
   sheetOpen.value = true
+}
+
+async function onDeleteSession(session: typeof sessions.value[number]) {
+  if (!confirm(`¿Eliminar la sesión del ${formatDate(session.date)}? Esta acción no se puede deshacer.`)) return
+  await deleteSession(session.id)
 }
 
 async function submitForm() {
@@ -216,9 +221,19 @@ async function submitForm() {
         >
           <div class="flex items-center justify-between">
             <p class="text-sm font-medium">{{ formatDate(session.date) }}</p>
-            <Button variant="ghost" size="icon" class="size-7" @click="openEditSession(session)">
-              <Pencil class="size-3.5" />
-            </Button>
+            <div class="flex items-center gap-1">
+              <Button variant="ghost" size="icon" class="size-7" @click="openEditSession(session)">
+                <Pencil class="size-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-7 text-destructive hover:text-destructive"
+                @click="onDeleteSession(session)"
+              >
+                <Trash2 class="size-3.5" />
+              </Button>
+            </div>
           </div>
 
           <div class="flex flex-wrap gap-1.5">

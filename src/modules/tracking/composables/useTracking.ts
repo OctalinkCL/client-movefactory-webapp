@@ -83,5 +83,16 @@ export function useTracking() {
     }
   }
 
-  return { sessions, loading, error, fetchSessions, createSession, updateSession }
+  async function deleteSession(sessionId: string) {
+    const { error: err } = await supabase
+      .from('tracking_sessions')
+      .delete()
+      .eq('id', sessionId)
+
+    if (err) { error.value = err.message; return }
+
+    sessions.value = sessions.value.filter(s => s.id !== sessionId)
+  }
+
+  return { sessions, loading, error, fetchSessions, createSession, updateSession, deleteSession }
 }
