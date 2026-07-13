@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SidebarMenu, SidebarMenuItem } from '@/components/ui/sidebar'
 
-const appVersion = 'v1.2'
+const appVersion = 'v1.3'
 </script>
 
 <template>

@@ -30,6 +30,13 @@ const filtered = computed(() =>
     : foods.value
 )
 
+function measureText(food: Food): string {
+  const grams = food.portion_grams_cooked
+    ? `${food.portion_grams_cooked}g cocido`
+    : `${food.portion_grams}g`
+  return food.household_measure ? `${grams} · ${food.household_measure}` : grams
+}
+
 watch(open, async (val) => {
   if (!val || foods.value.length) return
   loading.value = true
@@ -60,16 +67,17 @@ function select(food: Food) {
 <template>
   <Drawer v-model:open="open">
     <DrawerTrigger as-child>
-      <button class="flex items-center gap-0.5 text-sm shrink-0">
+      <button class="flex items-center gap-1 text-sm min-w-0 flex-1 justify-end">
         <template v-if="selection?.food">
-          <span class="font-medium">{{ selection.food.name }}</span>
-          <span v-if="selection.food.portion_grams_cooked" class="text-muted-foreground ml-1">
-            · {{ selection.food.portion_grams_cooked }}g cocido
+          <span class="flex flex-col items-end min-w-0 leading-tight py-0.5">
+            <span class="font-medium truncate max-w-full">{{ selection.food.name }}</span>
+            <span class="text-xs text-muted-foreground truncate max-w-full">
+              {{ measureText(selection.food) }}
+            </span>
           </span>
-          <span v-else class="text-muted-foreground ml-1">· {{ selection.food.portion_grams }}g</span>
         </template>
         <span v-else class="text-primary font-medium">Elegir</span>
-        <ChevronRight class="size-4 text-muted-foreground" />
+        <ChevronRight class="size-4 text-muted-foreground shrink-0" />
       </button>
     </DrawerTrigger>
 
@@ -82,11 +90,7 @@ function select(food: Food) {
       <div class="px-4 pb-3 shrink-0">
         <div class="relative">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            v-model="search"
-            class="pl-9"
-            :placeholder="`Buscar ${foodType.toLowerCase()}...`"
-          />
+          <Input v-model="search" class="pl-9" :placeholder="`Buscar ${foodType.toLowerCase()}...`" />
         </div>
       </div>
 
@@ -94,12 +98,8 @@ function select(food: Food) {
         <div v-if="loading" class="py-10 text-center text-sm text-muted-foreground">Cargando...</div>
         <div v-else-if="!filtered.length" class="py-10 text-center text-sm text-muted-foreground">Sin resultados</div>
         <div v-else class="divide-y">
-          <button
-            v-for="food in filtered"
-            :key="food.id"
-            @click="select(food)"
-            class="w-full flex items-center justify-between py-3.5 text-left"
-          >
+          <button v-for="food in filtered" :key="food.id" @click="select(food)"
+            class="w-full flex items-center justify-between py-3.5 text-left">
             <div class="min-w-0">
               <p class="text-sm font-medium">{{ food.name }}</p>
               <p class="text-xs text-muted-foreground">
