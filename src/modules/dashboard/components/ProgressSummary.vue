@@ -18,11 +18,26 @@ function getMeasurement(session: typeof sessions.value[number], metric: string) 
   return session.measurements?.find(m => m.metric === metric)?.value ?? null
 }
 
-const weightData = computed(() =>
+const pesoSessions = computed(() =>
   [...sessions.value].reverse()
     .filter(s => getMeasurement(s, 'weight') !== null)
-    .map(s => ({ fecha: s.date.slice(0, 10), valor: getMeasurement(s, 'weight') as number }))
     .slice(-6)
+)
+
+const weightData = computed(() =>
+  pesoSessions.value.map(s => ({ fecha: s.date.slice(0, 10), valor: getMeasurement(s, 'weight') as number }))
+)
+
+const weightSecondarySeries = [
+  { key: 'fatPct', label: '% Masa grasa', color: '#f97316' },
+  { key: 'musclePct', label: '% Masa muscular', color: '#8b5cf6' },
+]
+
+const weightSecondaryData = computed(() =>
+  pesoSessions.value.map(s => ({
+    fatPct: getMeasurement(s, 'fat_pct') ?? undefined,
+    musclePct: getMeasurement(s, 'muscle_pct') ?? undefined,
+  }))
 )
 
 function formatSessionDate(iso: string) {
@@ -54,7 +69,11 @@ const lastMusclePct = computed(() => sessions.value[0] ? getMeasurement(sessions
       />
     </div>
 
-    <WeightTrendCard :data="weightData.length ? weightData : undefined" />
+    <WeightTrendCard
+      :data="weightData.length ? weightData : undefined"
+      :secondary-series="weightSecondarySeries"
+      :secondary-data="weightData.length ? weightSecondaryData : undefined"
+    />
 
     <CompositionRings :fatPct="lastFatPct" :musclePct="lastMusclePct" />
   </div>

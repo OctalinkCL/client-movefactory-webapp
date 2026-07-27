@@ -30,11 +30,27 @@ const filtered = computed(() =>
     : foods.value
 )
 
+// Muestra el total ya multiplicado por la cantidad de porciones pedida en la
+// pauta (props.portion), igual que el cálculo de la lista de compras
+// (UserShoppingView.vue). "household_measure" es texto libre del alimento
+// (ej. "1 palma de la mano") y no se puede escalar de forma confiable, así
+// que solo se muestra cuando la cantidad es 1 porción.
 function measureText(food: Food): string {
-  const grams = food.portion_grams_cooked
-    ? `${food.portion_grams_cooked}g cocido`
-    : `${food.portion_grams}g`
-  return food.household_measure ? `${grams} · ${food.household_measure}` : grams
+  const factor = Number(props.portion) || 1
+  const gramsBase = food.portion_grams_cooked ?? food.portion_grams
+  const totalGrams = gramsBase * factor
+  const grams = food.portion_grams_cooked ? `${totalGrams}g cocido` : `${totalGrams}g`
+
+  if (food.is_unit_based && food.units_per_portion) {
+    const totalUnits = food.units_per_portion * factor
+    return `${grams} · ${totalUnits} ${totalUnits === 1 ? 'unidad' : 'unidades'}`
+  }
+
+  if (factor === 1 && food.household_measure) {
+    return `${grams} · ${food.household_measure}`
+  }
+
+  return grams
 }
 
 watch(open, async (val) => {
