@@ -27,11 +27,26 @@ function getMeasurement(session: typeof sessions.value[number] | undefined, metr
   return session?.measurements?.find(m => m.metric === metric)?.value ?? null
 }
 
-const chartPesoData = computed(() =>
+const pesoSessions = computed(() =>
   [...sessions.value].reverse()
     .filter(s => getMeasurement(s, 'weight') !== null)
-    .map(s => ({ fecha: s.date.slice(0, 10), valor: getMeasurement(s, 'weight') as number }))
     .slice(-6)
+)
+
+const chartPesoData = computed(() =>
+  pesoSessions.value.map(s => ({ fecha: s.date.slice(0, 10), valor: getMeasurement(s, 'weight') as number }))
+)
+
+const weightSecondarySeries = [
+  { key: 'fatPct', label: '% Masa grasa', color: '#f97316' },
+  { key: 'musclePct', label: '% Masa muscular', color: '#8b5cf6' },
+]
+
+const weightSecondaryData = computed(() =>
+  pesoSessions.value.map(s => ({
+    fatPct: getMeasurement(s, 'fat_pct') ?? undefined,
+    musclePct: getMeasurement(s, 'muscle_pct') ?? undefined,
+  }))
 )
 
 const chartCinturaData = computed(() =>
@@ -193,7 +208,11 @@ async function submitForm() {
     </div>
 
     <!-- Gráficas -->
-    <WeightTrendCard :data="chartPesoData.length ? chartPesoData : undefined" />
+    <WeightTrendCard
+      :data="chartPesoData.length ? chartPesoData : undefined"
+      :secondary-series="weightSecondarySeries"
+      :secondary-data="chartPesoData.length ? weightSecondaryData : undefined"
+    />
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <WeightTrendCard
