@@ -13,34 +13,62 @@ export function useUserFoodSelections() {
     selections.value = data ?? []
   }
 
-  function getSelection(mealPlanItemId: string, day: number): UserFoodSelection | null {
+  function getSelection(mealPlanItemId: string, day: number, slotIndex = 0): UserFoodSelection | null {
     return selections.value.find(
-      s => s.meal_plan_item_id === mealPlanItemId && s.day_of_week === day
+      s => s.meal_plan_item_id === mealPlanItemId && s.day_of_week === day && s.slot_index === slotIndex
     ) ?? null
   }
 
-  async function saveSelection(userId: string, mealPlanItemId: string, foodId: string, dayOfWeek: number) {
+  async function saveSelection(
+    userId: string,
+    mealPlanItemId: string,
+    foodId: string,
+    dayOfWeek: number,
+    slotIndex = 0
+  ) {
     await supabase
       .from('user_food_selections')
       .delete()
       .eq('user_id', userId)
       .eq('meal_plan_item_id', mealPlanItemId)
       .eq('day_of_week', dayOfWeek)
+      .eq('slot_index', slotIndex)
 
     const { data, error } = await supabase
       .from('user_food_selections')
-      .insert({ user_id: userId, meal_plan_item_id: mealPlanItemId, food_id: foodId, day_of_week: dayOfWeek })
+      .insert({
+        user_id: userId,
+        meal_plan_item_id: mealPlanItemId,
+        food_id: foodId,
+        day_of_week: dayOfWeek,
+        slot_index: slotIndex,
+      })
       .select('*, food:foods(*)')
       .single()
 
     if (error) return false
 
     const idx = selections.value.findIndex(
-      s => s.meal_plan_item_id === mealPlanItemId && s.day_of_week === dayOfWeek
+      s => s.meal_plan_item_id === mealPlanItemId && s.day_of_week === dayOfWeek && s.slot_index === slotIndex
     )
     if (idx !== -1) selections.value[idx] = data
     else selections.value.push(data)
     return true
+  }
+
+  // Al combinar de nuevo un ítem dividido, borra las selecciones de los
+  // slots extra (todo lo que no sea el slot 0) en todos los días.
+  async function clearSlotsFrom(userId: string, mealPlanItemId: string, minSlot: number) {
+    await supabase
+      .from('user_food_selections')
+      .delete()
+      .eq('user_id', userId)
+      .eq('meal_plan_item_id', mealPlanItemId)
+      .gte('slot_index', minSlot)
+
+    selections.value = selections.value.filter(
+      s => !(s.meal_plan_item_id === mealPlanItemId && s.slot_index >= minSlot)
+    )
   }
 
   async function copySelectionsForMoment(
@@ -64,6 +92,7 @@ export function useUserFoodSelections() {
         meal_plan_item_id: s.meal_plan_item_id,
         food_id: s.food_id,
         day_of_week: day,
+        slot_index: s.slot_index,
       }))
     )
 
@@ -84,5 +113,5 @@ export function useUserFoodSelections() {
     return true
   }
 
-  return { selections, fetchAll, getSelection, saveSelection, copySelectionsForMoment }
+  return { selections, fetchAll, getSelection, saveSelection, clearSlotsFrom, copySelectionsForMoment }
 }
