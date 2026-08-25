@@ -5,22 +5,29 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useMealPlan } from './composables/useMealPlan'
 import { useUserFoodSelections } from './composables/useUserFoodSelections'
+import { useItemSplits } from './composables/useItemSplits'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog'
 import FoodPickerDrawer from './components/FoodPickerDrawer.vue'
 import RepeatMomentDrawer from './components/RepeatMomentDrawer.vue'
-import type { MealPlanMoment } from '@/types/meal-plan'
+import type { MealPlanMoment, MealPlanItem } from '@/types/meal-plan'
 import type { Food } from '@/types/food'
 import type { UserFoodSelection } from '@/types/food-selection'
 
 const router = useRouter()
 const { profile } = storeToRefs(useAuthStore())
 const { plan, loading, fetchPlan } = useMealPlan()
-const { fetchAll, getSelection, saveSelection, copySelectionsForMoment } = useUserFoodSelections()
+const { fetchAll, getSelection, saveSelection, clearSlotsFrom, copySelectionsForMoment } = useUserFoodSelections()
+const { isSplit, fetchSplits, splitItem, unsplitItem } = useItemSplits()
 
 onMounted(() => {
   if (!profile.value) return
   fetchPlan(profile.value.id)
   fetchAll(profile.value.id)
+  fetchSplits(profile.value.id)
 })
 
 const DAYS = [
@@ -62,12 +69,23 @@ const momentsForDay = computed(() => {
     .sort((a, b) => (a.moment?.sort_order ?? 0) - (b.moment?.sort_order ?? 0))
 })
 
+// Slots que hay que completar para un ítem: 1 si está combinado (o tiene
+// una sola porción), o tantos como porciones si el alumno lo dividió.
+function slotsForItem(item: MealPlanItem): number[] {
+  if (item.portion === null) return []
+  const total = Number(item.portion) || 1
+  if (total <= 1 || !isSplit(item.id)) return [0]
+  return Array.from({ length: total }, (_, i) => i)
+}
+
 function dayIsComplete(dayN: number): boolean {
   if (!coveredDays.value.has(dayN)) return false
   const moments = plan.value?.meal_plan_moments?.filter(m => m.days.includes(dayN)) ?? []
   return moments.length > 0 && moments.every(m => {
     const required = (m.meal_plan_items ?? []).filter(i => i.portion !== null)
-    return required.length > 0 && required.every(i => getSelection(i.id, dayN) !== null)
+    return required.length > 0 && required.every(i =>
+      slotsForItem(i).every(slot => getSelection(i.id, dayN, slot) !== null)
+    )
   })
 }
 
@@ -82,18 +100,41 @@ function momentIcon(m: MealPlanMoment): string {
 function momentIsComplete(moment: MealPlanMoment): boolean {
   const required = (moment.meal_plan_items ?? []).filter(i => i.portion !== null)
   if (!required.length) return true
-  return required.every(i => getSelection(i.id, selectedDay.value) !== null)
+  return required.every(i =>
+    slotsForItem(i).every(slot => getSelection(i.id, selectedDay.value, slot) !== null)
+  )
 }
 
 function getSelectionsForMoment(moment: MealPlanMoment): UserFoodSelection[] {
-  return (moment.meal_plan_items ?? [])
-    .map(i => getSelection(i.id, selectedDay.value))
-    .filter(Boolean) as UserFoodSelection[]
+  return (moment.meal_plan_items ?? []).flatMap(i =>
+    slotsForItem(i)
+      .map(slot => getSelection(i.id, selectedDay.value, slot))
+      .filter(Boolean)
+  ) as UserFoodSelection[]
 }
 
-async function handleSelect(mealPlanItemId: string, food: Food) {
+async function handleSelect(mealPlanItemId: string, food: Food, slotIndex = 0) {
   if (!profile.value) return
-  await saveSelection(profile.value.id, mealPlanItemId, food.id, selectedDay.value)
+  await saveSelection(profile.value.id, mealPlanItemId, food.id, selectedDay.value, slotIndex)
+}
+
+async function handleSplit(itemId: string) {
+  if (!profile.value) return
+  await splitItem(profile.value.id, itemId)
+}
+
+const unsplitting = ref<{ id: string; foodType: string } | null>(null)
+
+function askUnsplit(item: MealPlanItem) {
+  unsplitting.value = { id: item.id, foodType: item.food_type }
+}
+
+async function confirmUnsplit() {
+  if (!profile.value || !unsplitting.value) return
+  const itemId = unsplitting.value.id
+  await unsplitItem(profile.value.id, itemId)
+  await clearSlotsFrom(profile.value.id, itemId, 1)
+  unsplitting.value = null
 }
 
 const allDaysComplete = computed(() => {
@@ -195,24 +236,65 @@ async function handleCopy(moment: MealPlanMoment, targetDays: number[]) {
 
           <!-- Ítems -->
           <div v-if="moment.meal_plan_items?.length" class="border-t divide-y">
-            <div
-              v-for="item in moment.meal_plan_items"
-              :key="item.id"
-              class="flex items-center justify-between px-4 py-3 gap-4"
-            >
-              <div class="min-w-0">
-                <p class="text-sm font-medium">{{ item.food_type }}</p>
-                <p class="text-xs text-muted-foreground">{{ item.portion ?? 'Libre elección' }}</p>
+            <div v-for="item in moment.meal_plan_items" :key="item.id">
+              <!-- Libre elección -->
+              <div v-if="!item.portion" class="flex items-center justify-between px-4 py-3 gap-4">
+                <div class="min-w-0">
+                  <p class="text-sm font-medium">{{ item.food_type }}</p>
+                  <p class="text-xs text-muted-foreground">Libre elección</p>
+                </div>
+                <span class="text-xs text-muted-foreground shrink-0">Libre</span>
               </div>
 
-              <span v-if="!item.portion" class="text-xs text-muted-foreground shrink-0">Libre</span>
-              <FoodPickerDrawer
-                v-else
-                :food-type="item.food_type"
-                :portion="item.portion"
-                :selection="getSelection(item.id, selectedDay)"
-                @select="(food) => handleSelect(item.id, food)"
-              />
+              <!-- Dividido: un selector por porción -->
+              <template v-else-if="isSplit(item.id) && Number(item.portion) > 1">
+                <div
+                  v-for="slot in slotsForItem(item)"
+                  :key="slot"
+                  class="flex items-center justify-between px-4 py-3 gap-4"
+                >
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium">{{ item.food_type }} {{ slot + 1 }}</p>
+                    <p class="text-xs text-muted-foreground">1 porción</p>
+                  </div>
+                  <FoodPickerDrawer
+                    :food-type="item.food_type"
+                    :label="`${item.food_type} ${slot + 1}`"
+                    portion="1"
+                    :selection="getSelection(item.id, selectedDay, slot)"
+                    @select="(food) => handleSelect(item.id, food, slot)"
+                  />
+                </div>
+                <button
+                  class="w-full text-left px-4 pb-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  @click="askUnsplit(item)"
+                >
+                  Combinar en un solo alimento
+                </button>
+              </template>
+
+              <!-- Combinado: un selector escalado x N (default) -->
+              <template v-else>
+                <div class="flex items-center justify-between px-4 py-3 gap-4">
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium">{{ item.food_type }}</p>
+                    <p class="text-xs text-muted-foreground">{{ item.portion }}</p>
+                  </div>
+                  <FoodPickerDrawer
+                    :food-type="item.food_type"
+                    :portion="item.portion"
+                    :selection="getSelection(item.id, selectedDay, 0)"
+                    @select="(food) => handleSelect(item.id, food, 0)"
+                  />
+                </div>
+                <button
+                  v-if="Number(item.portion) > 1"
+                  class="w-full text-left px-4 pb-3 text-xs text-primary hover:underline"
+                  @click="handleSplit(item.id)"
+                >
+                  Dividir en {{ item.portion }} alimentos distintos
+                </button>
+              </template>
             </div>
           </div>
 
@@ -223,5 +305,23 @@ async function handleCopy(moment: MealPlanMoment, targetDays: number[]) {
         </div>
       </div>
     </template>
+
+    <!-- Confirmación al combinar un ítem dividido -->
+    <Dialog :open="!!unsplitting" @update:open="v => { if (!v) unsplitting = null }">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>¿Combinar en un solo alimento?</DialogTitle>
+          <DialogDescription>
+            Vas a volver a elegir un único alimento para
+            <span class="font-medium text-foreground">{{ unsplitting?.foodType }}</span>.
+            Las selecciones adicionales que hiciste se van a perder.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" @click="unsplitting = null">Cancelar</Button>
+          <Button variant="destructive" @click="confirmUnsplit">Sí, combinar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

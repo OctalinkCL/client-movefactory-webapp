@@ -13,6 +13,8 @@ const props = defineProps<{
   foodType: string
   portion: string
   selection: UserFoodSelection | null
+  /** Texto a mostrar en vez de foodType (ej. "Proteína 1" para un slot dividido). foodType sigue usándose para buscar la categoría. */
+  label?: string
 }>()
 
 const emit = defineEmits<{
@@ -99,7 +101,7 @@ function select(food: Food) {
 
     <DrawerContent class="h-[82vh] flex flex-col">
       <DrawerHeader class="pb-3">
-        <DrawerTitle>Elegir {{ foodType.toLowerCase() }}</DrawerTitle>
+        <DrawerTitle>Elegir {{ (label ?? foodType).toLowerCase() }}</DrawerTitle>
         <p class="text-sm text-muted-foreground">{{ portion }} · selecciona 1 alimento</p>
       </DrawerHeader>
 

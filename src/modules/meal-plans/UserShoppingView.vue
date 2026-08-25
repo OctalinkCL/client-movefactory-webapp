@@ -4,18 +4,23 @@ import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useUserFoodSelections } from './composables/useUserFoodSelections'
+import { useItemSplits } from './composables/useItemSplits'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft } from 'lucide-vue-next'
 import type { Food } from '@/types/food'
 
 const { profile } = storeToRefs(useAuthStore())
 const { selections, fetchAll } = useUserFoodSelections()
+const { isSplit, fetchSplits } = useItemSplits()
 const router = useRouter()
 
 const loading = computed(() => !selections.value.length)
 
 onMounted(() => {
-  if (profile.value) fetchAll(profile.value.id)
+  if (profile.value) {
+    fetchAll(profile.value.id)
+    fetchSplits(profile.value.id)
+  }
 })
 
 interface ShoppingItem { food: Food; totalGrams: number; totalUnits: number }
@@ -26,7 +31,9 @@ const shoppingList = computed((): ShoppingCategory[] => {
 
   for (const sel of selections.value) {
     if (!sel.food) continue
-    const portions = Number(sel.meal_plan_item?.portion ?? 1)
+    // Si el ítem está dividido, cada selección ya representa 1 sola
+    // porción; si no, la selección representa el total del ítem.
+    const portions = isSplit(sel.meal_plan_item_id) ? 1 : Number(sel.meal_plan_item?.portion ?? 1)
     const existing = byFood.get(sel.food_id) ?? { food: sel.food, totalGrams: 0, totalUnits: 0 }
     if (sel.food.is_unit_based) {
       existing.totalUnits += portions * (sel.food.units_per_portion ?? 1)
