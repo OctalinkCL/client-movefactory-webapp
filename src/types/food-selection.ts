@@ -6,6 +6,7 @@ export interface UserFoodSelection {
   meal_plan_item_id: string
   food_id: string
   day_of_week: number
+  slot_index: number
   created_at: string
   food?: Food
   meal_plan_item?: { portion: string | null }
