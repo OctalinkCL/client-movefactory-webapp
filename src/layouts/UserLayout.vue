@@ -8,7 +8,7 @@ import AppFooterUser from "@/components/layouts/AppFooterUser.vue";
     <!-- Header -->
     <AppHeaderUser />
     <!-- Content -->
-    <main class="flex-1 container mx-auto px-4 pt-4 lg:px-0">
+    <main class="flex-1 container mx-auto px-4 pt-4 lg:px-0 lg:max-w-3xl">
       <router-view />
     </main>
     <!-- Footer -->
