@@ -1,37 +1,39 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { useAuthStore } from '@/stores/auth'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import PlanSummary from './components/PlanSummary.vue'
-import ProgressSummary from './components/ProgressSummary.vue'
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import PlanSummary from "./components/PlanSummary.vue";
+import ProgressSummary from "./components/ProgressSummary.vue";
 
-const { profile } = storeToRefs(useAuthStore())
-
-
+const { profile } = storeToRefs(useAuthStore());
 </script>
 <template>
   <div id="user-dashboard-page" class="grid gap-4 lg:gap-8 min-w-0">
-    <!-- Header -->
-    <div class="flex gap-3 items-center">
-      <Avatar class="size-12">
-        <AvatarImage v-if="profile?.avatar_url" :src="profile?.avatar_url" :alt="profile?.full_name" />
-        <AvatarFallback class="text-xl">{{ profile?.initials }}</AvatarFallback>
-      </Avatar>
+    <!-- top -->
+    <section class="font-title uppercase flex justify-between items-center">
       <div>
-        <h6 class="text-sm text-muted-foreground">Hola, Bienvenid@</h6>
-        <h3 class="text-xl font-medium">{{ profile?.full_name }}</h3>
+        <p class="text-muted-foreground leading-none font-medium">Hola</p>
+        <h3 class="text-3xl font-semibold leading-none">
+          {{ profile?.full_name }}
+        </h3>
       </div>
-    </div>
 
-    <!-- Content -->
-    <div class="grid gap-6">
-      <PlanSummary v-if="profile" :userId="profile.id" />
+      <Avatar class="size-12 border-2 border-white">
+        <AvatarImage
+          :src="
+            profile?.avatar_url
+              ? profile?.avatar_url
+              : 'https://api.dicebear.com/10.x/critters/svg'
+          "
+          :alt="profile?.full_name"
+        />
+      </Avatar>
+    </section>
 
-      <div v-if="profile" class="grid gap-4">
-        <h4 class="text-lg font-medium">Progreso</h4>
-        <ProgressSummary :userId="profile.id" />
-      </div>
-    </div>
+    <!-- meal_plan -->
+    <PlanSummary v-if="profile" :userId="profile.id" />
 
+    <!-- progress -->
+    <ProgressSummary v-if="profile" :userId="profile.id" />
   </div>
 </template>
