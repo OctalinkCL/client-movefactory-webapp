@@ -18,13 +18,13 @@ const hasPlan = computed(
 );
 
 const DAYS = [
-  { short: "L", n: 1 },
-  { short: "M", n: 2 },
-  { short: "M", n: 3 },
-  { short: "J", n: 4 },
-  { short: "V", n: 5 },
-  { short: "S", n: 6 },
-  { short: "D", n: 7 },
+  { short: "Lun", n: 1 },
+  { short: "Mar", n: 2 },
+  { short: "Mie", n: 3 },
+  { short: "Jue", n: 4 },
+  { short: "Vie", n: 5 },
+  { short: "Sab", n: 6 },
+  { short: "Dom", n: 7 },
 ];
 
 function todayDayNumber(): number {
@@ -50,35 +50,34 @@ const weekDays = computed(() => {
 });
 
 function goToPlan() {
-  router.push("/plan");
+  router.push("/app/plan");
 }
 
 onMounted(() => fetchPlan(props.userId));
 </script>
 
 <template>
-  <div class="rounded-xl bg-white">
-    <h5 class="text-sm uppercase text-muted-foreground font-medium">Mi Plan</h5>
-    <div v-if="hasPlan">
-      <p class="font-medium">Plan asignado</p>
-      <p class="text-sm text-muted-foreground">
-        Última actualización: {{ dateUpdatePlan }}
-      </p>
-    </div>
-    <div v-else>
-      <p class="font-medium">Aun no tenemos plan asignado para ti.</p>
-    </div>
-
-    <ul class="grid grid-cols-7">
+  <div class="rounded-xl bg-white p-3">
+    <ul v-if="hasPlan" class="grid grid-cols-7 gap-2" @click="goToPlan">
       <li
         v-for="day in weekDays"
         :key="day.n"
-        :class="{ 'bg-black text-white': day.isToday }"
+        class="font-title uppercase grid text-center rounded leading-4 py-1"
+        :class="{
+          'bg-amber-400 text-white': day.isToday,
+          'bg-zinc-100 ': !day.isToday,
+        }"
         @click="goToPlan"
       >
-        <span>{{ day.short }}</span>
-        <span>{{ day.date }}</span>
+        <span class="text-sm opacity-60">{{ day.short }}</span>
+        <span class="text-xl font-medium">{{ day.date }}</span>
       </li>
     </ul>
+    <p v-if="hasPlan" class="font-title text-xs text-muted-foreground mt-2">
+      Última actualización del plan de alimentación: {{ dateUpdatePlan }}
+    </p>
+    <p v-if="!hasPlan" class="font-medium text-sm font-title">
+      Aun no tenemos plan asignado para ti.
+    </p>
   </div>
 </template>
