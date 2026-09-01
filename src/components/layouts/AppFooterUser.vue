@@ -21,19 +21,13 @@ const navItems = [
 </script>
 
 <template>
-  <footer class="sticky bottom-0 p-3 lg:hidden flex justify-center">
+  <footer class="sticky bottom-0 p-3  flex justify-center">
     <nav class="flex bg-black rounded-full p-2 gap-4">
-      <button
-        v-for="item in navItems"
-        :key="item.to"
-        @click="router.push({ name: item.to })"
-        class="rounded-full p-3"
-        :class="
-          route.name === item.to
+      <button v-for="item in navItems" :key="item.to" @click="router.push({ name: item.to })" class="rounded-full p-3"
+        :class="route.name === item.to
             ? 'bg-amber-300 text-amber-950'
             : 'bg-transparent text-white'
-        "
-      >
+          ">
         <component :is="item.icon" class="size-7" stroke-width="1.5" />
         <!-- <span>{{ item.name }}</span> -->
       </button>

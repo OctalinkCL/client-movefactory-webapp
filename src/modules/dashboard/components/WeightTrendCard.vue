@@ -65,10 +65,7 @@ const secondaryTickFormat = (v: number) => `${v}${props.secondaryUnit}`;
 // calcula cada uno por separado según sus propios ejes).
 const overlayMargin = { top: 20, right: 44, bottom: 24, left: 4 };
 
-const unit = computed(() => props.label.match(/\(([^)]+)\)/)?.[1] ?? "");
-const titleWithUnit = computed(() =>
-  unit.value ? `${props.title} (${unit.value})` : props.title,
-);
+
 const scatterLabel = (d: DataPoint) => String(d.valor);
 
 function formatFecha(fecha: string) {
@@ -98,91 +95,36 @@ const xTicks = (tick: number) => {
     <!-- legend -->
     <div v-if="secondarySeries?.length" class="flex items-center gap-3">
       <span class="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <span
-          class="size-2 rounded-full shrink-0"
-          :style="{ backgroundColor: color }"
-        />
+        <span class="size-2 rounded-full shrink-0" :style="{ backgroundColor: color }" />
         {{ label }}
       </span>
-      <span
-        v-for="s in secondarySeries"
-        :key="s.label"
-        class="flex items-center gap-1.5 text-xs text-muted-foreground"
-      >
-        <span
-          class="size-2 rounded-full shrink-0"
-          :style="{ backgroundColor: s.color }"
-        />
+      <span v-for="s in secondarySeries" :key="s.label" class="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span class="size-2 rounded-full shrink-0" :style="{ backgroundColor: s.color }" />
         {{ s.label }}
       </span>
     </div>
     <div class="h-64 min-w-0 relative">
       <template v-if="props.data?.length">
-        <ChartContainer
-          :config="config"
-          :class="secondarySeries?.length ? 'absolute inset-0' : undefined"
-        >
+        <ChartContainer :config="config" :class="secondarySeries?.length ? 'absolute inset-0' : undefined">
           <template #default="{ id }">
-            <VisXYContainer
-              :data="props.data"
-              :id="id"
-              :xDomain="xDomain"
+            <VisXYContainer :data="props.data" :id="id" :xDomain="xDomain"
               :margin="secondarySeries?.length ? overlayMargin : undefined"
-              :autoMargin="secondarySeries?.length ? false : undefined"
-            >
-              <VisArea
-                :x="x"
-                :y="y"
-                :color="color"
-                :opacity="0.18"
-                :line="true"
-                :lineColor="color"
-                :lineWidth="2.5"
-              />
-              <VisScatter
-                :x="x"
-                :y="y"
-                :color="color"
-                :size="6"
-                :label="scatterLabel"
-                labelPosition="top"
-              />
-              <VisAxis
-                type="x"
-                :tickFormat="xTicks"
-                :tickValues="xTickValues"
-              />
+              :autoMargin="secondarySeries?.length ? false : undefined">
+              <VisArea :x="x" :y="y" :color="color" :opacity="0.18" :line="true" :lineColor="color" :lineWidth="2.5" />
+              <VisScatter :x="x" :y="y" :color="color" :size="6" :label="scatterLabel" labelPosition="top" />
+              <VisAxis type="x" :tickFormat="xTicks" :tickValues="xTickValues" />
             </VisXYContainer>
           </template>
         </ChartContainer>
 
-        <ChartContainer
-          v-if="secondarySeries?.length && secondaryData?.length"
-          :config="secondaryConfig"
-          class="absolute inset-0 pointer-events-none"
-        >
+        <ChartContainer v-if="secondarySeries?.length && secondaryData?.length" :config="secondaryConfig"
+          class="absolute inset-0 pointer-events-none">
           <template #default="{ id }">
-            <VisXYContainer
-              :data="secondaryData"
-              :id="id"
-              :xDomain="xDomain"
-              :yDomain="secondaryYDomain"
-              :margin="overlayMargin"
-              :autoMargin="false"
-            >
-              <VisLine
-                v-for="s in secondarySeries"
-                :key="s.key"
-                :x="x"
-                :y="ySecondary(s)"
-                :color="s.color"
-                :lineWidth="2"
-              />
-              <VisAxis
-                type="y"
-                position="right"
-                :tickFormat="secondaryTickFormat"
-              />
+            <VisXYContainer :data="secondaryData" :id="id" :xDomain="xDomain" :yDomain="secondaryYDomain"
+              :margin="overlayMargin" :autoMargin="false">
+              <VisLine v-for="s in secondarySeries" :key="s.key" :x="x" :y="ySecondary(s)" :color="s.color"
+                :lineWidth="2" />
+              <VisAxis type="y" position="right" :tickFormat="secondaryTickFormat" />
             </VisXYContainer>
           </template>
         </ChartContainer>
