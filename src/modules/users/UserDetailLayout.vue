@@ -231,6 +231,19 @@ async function saveProfile() {
           <button
             class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
             :class="
+              activeTab === 'admin-summary'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground'
+            "
+            @click="
+              router.push({ name: 'admin-summary', params: { id: userId } })
+            "
+          >
+            Resumen
+          </button>
+          <button
+            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+            :class="
               activeTab === 'admin-tracking'
                 ? 'bg-foreground text-background'
                 : 'text-muted-foreground hover:text-foreground'

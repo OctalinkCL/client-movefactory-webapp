@@ -21,7 +21,7 @@ const { users, loading, fetchUsers } = useUsers("user");
 const { toggleUser, loading: toggling } = useToggleUser();
 
 function goToDetail(id: string) {
-  router.push({ name: "admin-tracking", params: { id } });
+  router.push({ name: "admin-summary", params: { id } });
 }
 
 async function handleToggle(userId: string, currentActive: boolean) {
