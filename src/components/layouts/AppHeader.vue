@@ -18,7 +18,7 @@ const currentDate = new Intl.DateTimeFormat("es-CL", {
         orientation="vertical"
         class="ms-2 me-3.5 data-[orientation=vertical]:h-4 my-auto"
       />
-      <h5 class="text-sm">{{ currentDate }}</h5>
+      <h5 class="text-sm font-medium">{{ currentDate }}</h5>
       <!--  -->
       <div class="ml-auto">
         <NavUser />
