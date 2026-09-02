@@ -1,41 +1,47 @@
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useUser } from './composables/useUser'
-import { formatDateDisplay, sexLabel, calcAge } from '@/lib/utils'
-import { Input } from '@/components/ui/input'
-import { NativeSelect } from '@/components/ui/native-select'
+import { reactive, ref, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useUser } from "./composables/useUser";
+import { formatDateDisplay, sexLabel, calcAge } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
-} from '@/components/ui/sheet'
-import { ArrowLeft } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarImage } from '@/components/ui/avatar'
-import { Skeleton } from '@/components/ui/skeleton'
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { ArrowLeft } from "lucide-vue-next";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const route = useRoute()
-const router = useRouter()
-const userId = route.params.id as string
-const { user, loading, updateProfile } = useUser(userId)
+const route = useRoute();
+const router = useRouter();
+const userId = route.params.id as string;
+const { user, loading, updateProfile } = useUser(userId);
 
-const activeTab = computed(() => route.name as string)
+const activeTab = computed(() => route.name as string);
 
-const hasFixedData = () => !!(user.value?.birth_date || user.value?.sex || user.value?.height)
+const hasFixedData = () =>
+  !!(user.value?.birth_date || user.value?.sex || user.value?.height);
 
-const profileSheetOpen = ref(false)
+const profileSheetOpen = ref(false);
 const profileForm = reactive({
-  birth_date: '',
-  sex: '' as 'male' | 'female' | '',
-  height: '',
-  phone: '',
-})
+  birth_date: "",
+  sex: "" as "male" | "female" | "",
+  height: "",
+  phone: "",
+});
 
 function openProfileSheet() {
-  profileForm.birth_date = user.value?.birth_date ?? ''
-  profileForm.sex = user.value?.sex ?? ''
-  profileForm.height = user.value?.height?.toString() ?? ''
-  profileForm.phone = user.value?.phone ?? ''
-  profileSheetOpen.value = true
+  profileForm.birth_date = user.value?.birth_date ?? "";
+  profileForm.sex = user.value?.sex ?? "";
+  profileForm.height = user.value?.height?.toString() ?? "";
+  profileForm.phone = user.value?.phone ?? "";
+  profileSheetOpen.value = true;
 }
 
 async function saveProfile() {
@@ -44,8 +50,8 @@ async function saveProfile() {
     sex: profileForm.sex || null,
     height: profileForm.height ? parseFloat(profileForm.height) : null,
     phone: profileForm.phone || null,
-  })
-  profileSheetOpen.value = false
+  });
+  profileSheetOpen.value = false;
 }
 </script>
 
@@ -57,13 +63,13 @@ async function saveProfile() {
         @click="router.push({ name: 'admin-users' })"
       >
         <ArrowLeft :size="15" />
-        Volver al Directorio de usuarios
+        Volver a lista de usuarios
       </button>
     </header>
 
     <div class="flex flex-col gap-4 | lg:flex-row lg:gap-6">
       <!-- aside: siempre visible -->
-      <aside class="w-full lg:w-[300px] lg:shrink-0">
+      <aside class="w-full lg:w-75 lg:shrink-0">
         <div class="border rounded-xl">
           <!-- basic -->
           <section class="px-4 py-6 text-center space-y-3">
@@ -77,7 +83,10 @@ async function saveProfile() {
             <div>
               <div v-if="!loading">
                 <h1 class="text-xl font-semibold">{{ user?.full_name }}</h1>
-                <p v-if="user?.birth_date" class="text-sm text-muted-foreground">
+                <p
+                  v-if="user?.birth_date"
+                  class="text-sm text-muted-foreground"
+                >
                   {{ formatDateDisplay(user?.birth_date) }}
                 </p>
               </div>
@@ -90,16 +99,21 @@ async function saveProfile() {
             <Sheet v-if="!loading" v-model:open="profileSheetOpen">
               <SheetTrigger as-child>
                 <Button size="xs" variant="outline" @click="openProfileSheet">
-                  {{ hasFixedData() ? 'Editar datos' : 'Completar datos' }}
+                  {{ hasFixedData() ? "Editar datos" : "Completar datos" }}
                 </Button>
               </SheetTrigger>
-              <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
+              <SheetContent
+                @open-auto-focus.prevent
+                class="min-w-full md:min-w-sm"
+              >
                 <SheetHeader>
                   <SheetTitle>Datos del paciente</SheetTitle>
                 </SheetHeader>
                 <div class="px-4 space-y-4">
                   <div class="space-y-1.5 overflow-hidden">
-                    <label class="text-sm font-medium">Fecha de nacimiento</label>
+                    <label class="text-sm font-medium"
+                      >Fecha de nacimiento</label
+                    >
                     <Input v-model="profileForm.birth_date" type="date" />
                   </div>
                   <div class="space-y-1.5">
@@ -112,15 +126,29 @@ async function saveProfile() {
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-sm font-medium">Estatura (cm)</label>
-                    <Input v-model="profileForm.height" type="number" step="0.1" placeholder="170" />
+                    <Input
+                      v-model="profileForm.height"
+                      type="number"
+                      step="0.1"
+                      placeholder="170"
+                    />
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-sm font-medium">Teléfono</label>
-                    <Input v-model="profileForm.phone" type="tel" placeholder="+56 9 1234 5678" />
+                    <Input
+                      v-model="profileForm.phone"
+                      type="tel"
+                      placeholder="+56 9 1234 5678"
+                    />
                   </div>
                 </div>
                 <SheetFooter class="grid grid-cols-2 gap-4">
-                  <Button size="lg" variant="outline" @click="profileSheetOpen = false">Cancelar</Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    @click="profileSheetOpen = false"
+                    >Cancelar</Button
+                  >
                   <Button size="lg" @click="saveProfile">Guardar</Button>
                 </SheetFooter>
               </SheetContent>
@@ -129,44 +157,66 @@ async function saveProfile() {
 
           <!-- info -->
           <section class="border-t p-4">
-            <h5 class="text-sm font-medium text-muted-foreground">Datos del Paciente</h5>
+            <h5 class="text-sm font-medium text-muted-foreground">
+              Datos del Paciente
+            </h5>
             <ul class="text-sm mt-4 grid grid-cols-2 gap-4">
               <li>
                 <h4 class="text-muted-foreground">Edad</h4>
                 <Skeleton class="h-4 w-25" v-if="loading" />
                 <p v-else class="font-medium">
-                  {{ user?.birth_date ? `${calcAge(user.birth_date)} años` : 'Sin especificar' }}
+                  {{
+                    user?.birth_date
+                      ? `${calcAge(user.birth_date)} años`
+                      : "Sin especificar"
+                  }}
                 </p>
               </li>
               <li>
                 <h4 class="text-muted-foreground">Sexo</h4>
                 <Skeleton class="h-4 w-25" v-if="loading" />
-                <p v-else class="font-medium">{{ user?.sex ? sexLabel(user?.sex) : 'Sin especificar' }}</p>
+                <p v-else class="font-medium">
+                  {{ user?.sex ? sexLabel(user?.sex) : "Sin especificar" }}
+                </p>
               </li>
               <li>
                 <h4 class="text-muted-foreground">Estatura</h4>
                 <Skeleton class="h-4 w-25" v-if="loading" />
-                <p v-else class="font-medium">{{ user?.height ? `${user?.height} cm` : 'Sin especificar' }}</p>
+                <p v-else class="font-medium">
+                  {{ user?.height ? `${user?.height} cm` : "Sin especificar" }}
+                </p>
               </li>
             </ul>
           </section>
 
           <!-- contact -->
           <section class="border-t p-4">
-            <h5 class="text-sm font-medium text-muted-foreground">Información de Contacto</h5>
+            <h5 class="text-sm font-medium text-muted-foreground">
+              Información de Contacto
+            </h5>
             <ul class="text-sm mt-4 grid gap-4">
               <li>
                 <h4 class="text-muted-foreground">Teléfono / Whatsapp</h4>
                 <Skeleton class="h-4 w-40" v-if="loading" />
-                <a v-else :href="`https://wa.me/${user?.phone}`" target="_blank" class="font-medium">
-                  {{ user?.phone ? `+56 ${user?.phone}` : 'Sin especificar' }}
+                <a
+                  v-else
+                  :href="`https://wa.me/${user?.phone}`"
+                  target="_blank"
+                  class="font-medium"
+                >
+                  {{ user?.phone ? `+56 ${user?.phone}` : "Sin especificar" }}
                 </a>
               </li>
               <li>
                 <h4 class="text-muted-foreground">Correo Electrónico</h4>
                 <Skeleton class="h-4 w-40" v-if="loading" />
-                <a v-else :href="`mailto:${user?.email}`" target="_blank" class="font-medium">
-                  {{ user?.email || 'Sin especificar' }}
+                <a
+                  v-else
+                  :href="`mailto:${user?.email}`"
+                  target="_blank"
+                  class="font-medium"
+                >
+                  {{ user?.email || "Sin especificar" }}
                 </a>
               </li>
             </ul>
@@ -180,19 +230,27 @@ async function saveProfile() {
         <div class="flex gap-2">
           <button
             class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-            :class="activeTab === 'admin-tracking'
-              ? 'bg-foreground text-background'
-              : 'text-muted-foreground hover:text-foreground'"
-            @click="router.push({ name: 'admin-tracking', params: { id: userId } })"
+            :class="
+              activeTab === 'admin-tracking'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground'
+            "
+            @click="
+              router.push({ name: 'admin-tracking', params: { id: userId } })
+            "
           >
             Seguimiento
           </button>
           <button
             class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-            :class="activeTab === 'admin-meal-plan'
-              ? 'bg-foreground text-background'
-              : 'text-muted-foreground hover:text-foreground'"
-            @click="router.push({ name: 'admin-meal-plan', params: { id: userId } })"
+            :class="
+              activeTab === 'admin-meal-plan'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground'
+            "
+            @click="
+              router.push({ name: 'admin-meal-plan', params: { id: userId } })
+            "
           >
             Plan de alimentación
           </button>
