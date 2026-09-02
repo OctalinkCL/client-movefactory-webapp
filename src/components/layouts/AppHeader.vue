@@ -11,9 +11,7 @@ const currentDate = new Intl.DateTimeFormat("es-CL", {
 </script>
 
 <template>
-  <header
-    class="border-b sticky top-0 z-10 bg-card h-12 flex items-center lg:h-12"
-  >
+  <header class="border-b sticky top-0 z-10 h-12 flex items-center lg:h-14">
     <div class="px-4 flex w-full items-center">
       <SidebarTrigger />
       <Separator

@@ -6,7 +6,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 <template>
   <SidebarProvider>
-    <AppSidebar />
+    <AppSidebar variant="inset" />
     <SidebarInset class="bg-card">
       <AppHeader />
       <div class="p-4 lg:p-6">
