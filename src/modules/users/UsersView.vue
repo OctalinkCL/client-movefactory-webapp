@@ -4,7 +4,6 @@ import CreateUser from "./components/CreateUser.vue";
 import { useUsers } from "./composables/useUsers";
 import { useToggleUser } from "./composables/useToggleUser";
 import EmptyItem from "@/components/shared/EmptyItem.vue";
-import { getInitials } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -13,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AvatarUser from "@/components/shared/AvatarUser.vue";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 
@@ -38,9 +37,6 @@ async function handleToggle(userId: string, currentActive: boolean) {
     <header class="flex items-start justify-between lg:items-center">
       <div class="leading-tight">
         <h1 class="text-xl font-medium">Usuarios</h1>
-        <p class="text-sm text-muted-foreground">
-          Administra los miembros del gimnasio, actividades etc.
-        </p>
       </div>
       <CreateUser role="user" @created="fetchUsers" />
     </header>
@@ -53,12 +49,7 @@ async function handleToggle(userId: string, currentActive: boolean) {
       <EmptyItem section="users" />
     </div>
 
-    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3" v-else>
-      <!-- card-user -->
-      <div v-for="user in users" :key="user.id" class="border rounded">
-        <pre>{{ user }}</pre>
-      </div>
-
+    <div class="border rounded-lg" v-else>
       <Table>
         <TableHeader>
           <TableRow>
@@ -70,17 +61,11 @@ async function handleToggle(userId: string, currentActive: boolean) {
         </TableHeader>
         <TableBody>
           <TableRow v-for="user in users" :key="user.id">
-            <TableCell class="font-medium flex items-center gap-2">
-              <Avatar class="bg-lime-600">
-                <AvatarImage
-                  :src="user.avatar_url"
-                  :alt="user.full_name"
-                  v-if="user.avatar_url"
-                />
-                <AvatarFallback class="text-xs" v-else>{{
-                  getInitials(user.full_name)
-                }}</AvatarFallback>
-              </Avatar>
+            <TableCell
+              class="font-medium flex items-center gap-2 cursor-pointer"
+              @click="goToDetail(user.id)"
+            >
+              <AvatarUser :src="user.avatar_url" :name="user.full_name" />
               {{ user.full_name }}
               <span
                 v-if="!user.is_active"
@@ -92,23 +77,15 @@ async function handleToggle(userId: string, currentActive: boolean) {
             <TableCell>{{ user.email }}</TableCell>
             <TableCell>{{ user.phone ?? "—" }}</TableCell>
             <TableCell class="text-right">
-              <div class="flex items-center justify-end gap-3">
-                <span
-                  class="text-sm hover:underline cursor-pointer"
-                  @click="goToDetail(user.id)"
-                >
-                  Ver usuario
-                </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  class="text-destructive hover:text-destructive"
-                  :disabled="toggling"
-                  @click="handleToggle(user.id, user.is_active)"
-                >
-                  {{ user.is_active ? "Suspender" : "Reactivar" }}
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                class="text-destructive hover:text-destructive cursor-pointer"
+                :disabled="toggling"
+                @click="handleToggle(user.id, user.is_active)"
+              >
+                {{ user.is_active ? "Suspender" : "Reactivar" }}
+              </Button>
             </TableCell>
           </TableRow>
         </TableBody>

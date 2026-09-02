@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCreateUser } from "../composables/useCreateUser";
-import { UserPlus } from "lucide-vue-next";
+import { CirclePlus } from "lucide-vue-next";
 
 const props = defineProps<{
   role: "nutritionist" | "user";
@@ -43,7 +43,7 @@ async function submit() {
   <Dialog v-model:open="open">
     <DialogTrigger as-child>
       <Button class="cursor-pointer">
-        <UserPlus />
+        <CirclePlus />
         Agregar {{ label }}
       </Button>
     </DialogTrigger>
