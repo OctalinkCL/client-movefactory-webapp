@@ -11,12 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCreateUser } from "../composables/useCreateUser";
+import { UserPlus } from "lucide-vue-next";
 
 const props = defineProps<{
   role: "nutritionist" | "user";
-}>()
+}>();
 
-const emit = defineEmits<{ created: [] }>()
+const emit = defineEmits<{ created: [] }>();
 
 const label = computed(() =>
   props.role === "nutritionist" ? "Staff" : "Usuario",
@@ -41,7 +42,10 @@ async function submit() {
 <template>
   <Dialog v-model:open="open">
     <DialogTrigger as-child>
-      <Button>Agregar {{ label }}</Button>
+      <Button class="cursor-pointer">
+        <UserPlus />
+        Agregar {{ label }}
+      </Button>
     </DialogTrigger>
     <DialogContent class="sm:max-w-md" :aria-describedby="undefined">
       <DialogHeader>
@@ -50,7 +54,12 @@ async function submit() {
       <form @submit.prevent="submit" class="flex flex-col gap-4 pt-4">
         <Input v-model="form.full_name" placeholder="Nombre completo" />
         <Input v-model="form.email" type="email" placeholder="Email" />
-        <Input v-model="form.password" type="password" placeholder="Contraseña temporal" autocomplete="off" />
+        <Input
+          v-model="form.password"
+          type="password"
+          placeholder="Contraseña temporal"
+          autocomplete="off"
+        />
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
         <DialogFooter>
           <Button type="submit" :disabled="loading">
