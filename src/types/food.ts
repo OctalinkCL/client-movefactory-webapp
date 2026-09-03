@@ -13,6 +13,7 @@ export interface Food {
   household_measure: string | null
   is_unit_based: boolean
   units_per_portion: number | null
+  is_active: boolean
   created_at: string
   category?: FoodCategory
 }

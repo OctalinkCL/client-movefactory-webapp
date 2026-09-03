@@ -14,13 +14,24 @@ import {
 } from '@/components/ui/sheet'
 import { Plus } from 'lucide-vue-next'
 
-const { foods, categories, loading, fetchFoods, fetchCategories, createFood, updateFood } = useFoods()
+const { foods, categories, loading, fetchFoods, fetchCategories, createFood, updateFood, setActive } = useFoods()
 
 onMounted(() => { fetchFoods(); fetchCategories() })
 
 const sheetOpen = ref(false)
 const editingId = ref<string | null>(null)
 const isEditing = computed(() => editingId.value !== null)
+
+const showInactive = ref(false)
+const visibleFoods = computed(() =>
+  showInactive.value ? foods.value : foods.value.filter(f => f.is_active)
+)
+const inactiveCount = computed(() => foods.value.filter(f => !f.is_active).length)
+
+async function toggleActive(food: Food) {
+  if (food.is_active && !confirm(`¿Desactivar "${food.name}"? Dejará de aparecer al elegir alimentos, pero las selecciones actuales de los alumnos se conservan.`)) return
+  await setActive(food.id, !food.is_active)
+}
 
 const form = reactive({
   name: '',
@@ -91,41 +102,61 @@ async function submit() {
       <Skeleton class="h-9" v-for="i in 6" :key="i" />
     </div>
 
-    <div class="border rounded-lg overflow-hidden" v-else>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Alimento</TableHead>
-            <TableHead>Categoría</TableHead>
-            <TableHead class="text-right">Porción (g)</TableHead>
-            <TableHead class="text-right">Cocido (g)</TableHead>
-            <TableHead>Medida casera</TableHead>
-            <TableHead>Compra</TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow v-for="food in foods" :key="food.id">
-            <TableCell class="font-medium">{{ food.name }}</TableCell>
-            <TableCell>
-              <span class="text-xs px-2 py-0.5 rounded-full border bg-muted text-muted-foreground">
-                {{ food.category?.name }}
-              </span>
-            </TableCell>
-            <TableCell class="text-right">{{ food.portion_grams }}</TableCell>
-            <TableCell class="text-right text-muted-foreground">{{ food.portion_grams_cooked ?? '—' }}</TableCell>
-            <TableCell class="text-muted-foreground">{{ food.household_measure ?? '—' }}</TableCell>
-            <TableCell class="text-muted-foreground">
-              {{ food.is_unit_based ? `${food.units_per_portion ?? '?'} un/porción` : '—' }}
-            </TableCell>
-            <TableCell class="text-right">
-              <button class="text-xs text-muted-foreground hover:underline" @click="openEdit(food)">
-                Editar
-              </button>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+    <div v-else class="grid gap-2">
+      <div v-if="inactiveCount > 0" class="flex justify-end">
+        <button class="text-xs text-muted-foreground hover:underline" @click="showInactive = !showInactive">
+          {{ showInactive ? 'Ocultar inactivos' : `Ver inactivos (${inactiveCount})` }}
+        </button>
+      </div>
+
+      <div class="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Alimento</TableHead>
+              <TableHead>Categoría</TableHead>
+              <TableHead class="text-right">Porción (g)</TableHead>
+              <TableHead class="text-right">Cocido (g)</TableHead>
+              <TableHead>Medida casera</TableHead>
+              <TableHead>Compra</TableHead>
+              <TableHead></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-for="food in visibleFoods" :key="food.id" :class="{ 'opacity-55': !food.is_active }">
+              <TableCell class="font-medium">
+                {{ food.name }}
+                <span v-if="!food.is_active" class="ml-2 text-xs px-2 py-0.5 rounded-full border bg-muted text-muted-foreground align-middle">
+                  Inactivo
+                </span>
+              </TableCell>
+              <TableCell>
+                <span class="text-xs px-2 py-0.5 rounded-full border bg-muted text-muted-foreground">
+                  {{ food.category?.name }}
+                </span>
+              </TableCell>
+              <TableCell class="text-right">{{ food.portion_grams }}</TableCell>
+              <TableCell class="text-right text-muted-foreground">{{ food.portion_grams_cooked ?? '—' }}</TableCell>
+              <TableCell class="text-muted-foreground">{{ food.household_measure ?? '—' }}</TableCell>
+              <TableCell class="text-muted-foreground">
+                {{ food.is_unit_based ? `${food.units_per_portion ?? '?'} un/porción` : '—' }}
+              </TableCell>
+              <TableCell class="text-right whitespace-nowrap">
+                <button class="text-xs text-muted-foreground hover:underline" @click="openEdit(food)">
+                  Editar
+                </button>
+                <button
+                  class="ml-3 text-xs hover:underline"
+                  :class="food.is_active ? 'text-destructive' : 'text-primary'"
+                  @click="toggleActive(food)"
+                >
+                  {{ food.is_active ? 'Desactivar' : 'Reactivar' }}
+                </button>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
     </div>
 
     <Sheet v-model:open="sheetOpen">
