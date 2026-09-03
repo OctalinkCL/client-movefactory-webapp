@@ -58,10 +58,8 @@ async function saveProfile() {
 <template>
   <div class="space-y-4">
     <header>
-      <button
-        class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer"
-        @click="router.push({ name: 'admin-users' })"
-      >
+      <button class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer"
+        @click="router.push({ name: 'admin-users' })">
         <ArrowLeft :size="15" />
         Volver a lista de usuarios
       </button>
@@ -83,10 +81,7 @@ async function saveProfile() {
             <div>
               <div v-if="!loading">
                 <h1 class="text-xl font-semibold">{{ user?.full_name }}</h1>
-                <p
-                  v-if="user?.birth_date"
-                  class="text-sm text-muted-foreground"
-                >
+                <p v-if="user?.birth_date" class="text-sm text-muted-foreground">
                   {{ formatDateDisplay(user?.birth_date) }}
                 </p>
               </div>
@@ -102,18 +97,13 @@ async function saveProfile() {
                   {{ hasFixedData() ? "Editar datos" : "Completar datos" }}
                 </Button>
               </SheetTrigger>
-              <SheetContent
-                @open-auto-focus.prevent
-                class="min-w-full md:min-w-sm"
-              >
+              <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
                 <SheetHeader>
                   <SheetTitle>Datos del paciente</SheetTitle>
                 </SheetHeader>
                 <div class="px-4 space-y-4">
                   <div class="space-y-1.5 overflow-hidden">
-                    <label class="text-sm font-medium"
-                      >Fecha de nacimiento</label
-                    >
+                    <label class="text-sm font-medium">Fecha de nacimiento</label>
                     <Input v-model="profileForm.birth_date" type="date" />
                   </div>
                   <div class="space-y-1.5">
@@ -126,29 +116,15 @@ async function saveProfile() {
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-sm font-medium">Estatura (cm)</label>
-                    <Input
-                      v-model="profileForm.height"
-                      type="number"
-                      step="0.1"
-                      placeholder="170"
-                    />
+                    <Input v-model="profileForm.height" type="number" step="0.1" placeholder="170" />
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-sm font-medium">Teléfono</label>
-                    <Input
-                      v-model="profileForm.phone"
-                      type="tel"
-                      placeholder="+56 9 1234 5678"
-                    />
+                    <Input v-model="profileForm.phone" type="tel" placeholder="+56 9 1234 5678" />
                   </div>
                 </div>
                 <SheetFooter class="grid grid-cols-2 gap-4">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    @click="profileSheetOpen = false"
-                    >Cancelar</Button
-                  >
+                  <Button size="lg" variant="outline" @click="profileSheetOpen = false">Cancelar</Button>
                   <Button size="lg" @click="saveProfile">Guardar</Button>
                 </SheetFooter>
               </SheetContent>
@@ -198,24 +174,14 @@ async function saveProfile() {
               <li>
                 <h4 class="text-muted-foreground">Teléfono / Whatsapp</h4>
                 <Skeleton class="h-4 w-40" v-if="loading" />
-                <a
-                  v-else
-                  :href="`https://wa.me/${user?.phone}`"
-                  target="_blank"
-                  class="font-medium"
-                >
+                <a v-else :href="`https://wa.me/${user?.phone}`" target="_blank" class="font-medium">
                   {{ user?.phone ? `+56 ${user?.phone}` : "Sin especificar" }}
                 </a>
               </li>
               <li>
                 <h4 class="text-muted-foreground">Correo Electrónico</h4>
                 <Skeleton class="h-4 w-40" v-if="loading" />
-                <a
-                  v-else
-                  :href="`mailto:${user?.email}`"
-                  target="_blank"
-                  class="font-medium"
-                >
+                <a v-else :href="`mailto:${user?.email}`" target="_blank" class="font-medium">
                   {{ user?.email || "Sin especificar" }}
                 </a>
               </li>
@@ -226,48 +192,35 @@ async function saveProfile() {
 
       <!-- contenido dinámico -->
       <div class="flex-1 min-w-0 space-y-4">
-        <!-- nav -->
-        <div class="flex gap-2">
-          <button
-            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-            :class="
-              activeTab === 'admin-summary'
-                ? 'bg-foreground text-background'
-                : 'text-muted-foreground hover:text-foreground'
-            "
-            @click="
-              router.push({ name: 'admin-summary', params: { id: userId } })
-            "
-          >
-            Resumen
-          </button>
-          <button
-            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-            :class="
-              activeTab === 'admin-tracking'
-                ? 'bg-foreground text-background'
-                : 'text-muted-foreground hover:text-foreground'
-            "
-            @click="
-              router.push({ name: 'admin-tracking', params: { id: userId } })
-            "
-          >
-            Seguimiento
-          </button>
-          <button
-            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-            :class="
-              activeTab === 'admin-meal-plan'
-                ? 'bg-foreground text-background'
-                : 'text-muted-foreground hover:text-foreground'
-            "
-            @click="
-              router.push({ name: 'admin-meal-plan', params: { id: userId } })
-            "
-          >
-            Plan de alimentación
-          </button>
-        </div>
+        <!-- navigation -->
+        <section class="bg-zinc-100 rounded-lg p-1">
+          <div class="flex gap-2">
+            <button class="px-4 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer" :class="activeTab === 'admin-summary'
+              ? 'bg-white text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              " @click="
+                router.push({ name: 'admin-summary', params: { id: userId } })
+                ">
+              Resumen
+            </button>
+            <button class="px-4 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer" :class="activeTab === 'admin-tracking'
+              ? 'bg-white text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              " @click="
+                router.push({ name: 'admin-tracking', params: { id: userId } })
+                ">
+              Seguimiento
+            </button>
+            <button class="px-4 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer" :class="activeTab === 'admin-meal-plan'
+              ? 'bg-white text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              " @click="
+                router.push({ name: 'admin-meal-plan', params: { id: userId } })
+                ">
+              Plan de alimentación
+            </button>
+          </div>
+        </section>
 
         <RouterView />
       </div>
