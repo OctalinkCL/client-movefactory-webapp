@@ -57,42 +57,46 @@ const lastSessionDate = computed(() => sessions.value[0] ? formatDate(sessions.v
 
 <template>
   <div class="space-y-4">
-    <header class="flex items-center justify-between">
-      <h1 class="text-2xl font-semibold">Resumen</h1>
-    </header>
 
-    <!-- Resumen -->
-    <div class="grid grid-cols-2 gap-4">
-      <StatCard
-        :icon="Weight"
-        label="Peso actual"
-        :value="lastWeight != null ? String(lastWeight) : '--'"
-        :suffix="lastWeight != null ? 'kg' : undefined"
-        subtitle="Último registro"
-      />
-      <StatCard
-        :icon="CalendarDays"
-        label="Último control"
-        :value="lastSessionDate ?? 'Sin registros'"
-      />
-    </div>
+    <h3 class="text-end text-sm font-medium text-muted-foreground">
+      Último Control: {{ lastSessionDate ?? 'Sin registros' }}
+    </h3>
 
-    <!-- Gráficas -->
-    <WeightTrendCard
-      :data="chartPesoData.length ? chartPesoData : undefined"
-      :secondary-series="weightSecondarySeries"
-      :secondary-data="chartPesoData.length ? weightSecondaryData : undefined"
-    />
+    <!-- KPI's -->
+    <section class="rounded-lg border md:grid md:grid-cols-3">
+      <div class="p-3">
+        <h5 class="text-xl font-semibold leading-1">
+          {{ lastWeight != null ? String(lastWeight) : '--' }}
+          <small class="text-muted-foreground text-sm font-normal">{{ lastWeight != null ? 'kg' : undefined }}</small>
+        </h5>
+        <p class="text-sm text-muted-foreground">Último registro</p>
+      </div>
+      <div class="p-3 border-y md:border-y-0 md:border-x">
+        <h5 class="text-xl font-semibold leading-1">
+          {{ lastFatPct != null ? String(lastFatPct) : '--' }}
+          <small class="text-muted-foreground text-sm font-normal">{{ lastFatPct != null ? '%' : undefined }}</small>
+        </h5>
+        <p class="text-sm text-muted-foreground">Masa Grasa</p>
+      </div>
+      <div class="p-3">
+        <h5 class="text-xl font-semibold leading-1">
+          {{ lastMusclePct != null ? String(lastMusclePct) : '--' }}
+          <small class="text-muted-foreground text-sm font-normal">{{ lastMusclePct != null ? '%' : undefined }}</small>
+        </h5>
+        <p class="text-sm text-muted-foreground">Masa Muscular</p>
+      </div>
+    </section>
+
+    <section class="rounded-lg border">
+      <WeightTrendCard :data="chartPesoData.length ? chartPesoData : undefined"
+        :secondary-series="weightSecondarySeries"
+        :secondary-data="chartPesoData.length ? weightSecondaryData : undefined" />
+    </section>
+
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <WeightTrendCard
-        :data="chartCinturaData.length ? chartCinturaData : undefined"
-        title="Tendencia de cintura"
-        label="Cintura (cm)"
-        color="#3b82f6"
-        empty-message="Aún no hay registros de cintura"
-      />
-      <CompositionRings :fatPct="lastFatPct" :musclePct="lastMusclePct" />
+      <WeightTrendCard :data="chartCinturaData.length ? chartCinturaData : undefined" title="Tendencia de cintura"
+        label="Cintura (cm)" color="#3b82f6" empty-message="Aún no hay registros de cintura" />
     </div>
   </div>
 </template>
