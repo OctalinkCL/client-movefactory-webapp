@@ -4,7 +4,6 @@ import { useStaff } from "./composables/useStaff";
 import { useToggleUser } from "./composables/useToggleUser";
 import { useAuthStore } from "@/stores/auth";
 import EmptyItem from "@/components/shared/EmptyItem.vue";
-import { getInitials } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -69,10 +68,8 @@ async function handleToggle(userId: string, currentActive: boolean) {
             <TableCell class="font-medium flex items-center gap-2">
               <AvatarUser :src="user.avatar_url" :name="user.full_name" />
               {{ user.full_name }}
-              <span
-                v-if="!user.is_active"
-                class="text-xs px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border"
-              >
+              <span v-if="!user.is_active"
+                class="text-xs px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
                 Suspendido
               </span>
             </TableCell>
@@ -82,26 +79,19 @@ async function handleToggle(userId: string, currentActive: boolean) {
               {{ roleLabel(user.role) }}
             </TableCell>
             <TableCell>
-              <span
-                :class="{
-                  'px-2 py-0.5 rounded-full text-xs font-medium': true,
-                  'bg-green-500/10 text-green-500 ': user.is_active,
-                  'bg-red-500/10 text-red-500': !user.is_active,
-                }"
-              >
+              <span :class="{
+                'px-2 py-0.5 rounded-full text-xs font-medium': true,
+                'bg-green-500/10 text-green-500 ': user.is_active,
+                'bg-red-500/10 text-red-500': !user.is_active,
+              }">
                 {{ user.is_active ? "Activo" : "Suspendido" }}
               </span>
             </TableCell>
             <!-- actions -->
             <TableCell class="text-right">
-              <Button
-                v-if="user.id !== authStore.profile?.id"
-                size="sm"
-                variant="ghost"
-                class="text-destructive hover:text-destructive cursor-pointer"
-                :disabled="toggling"
-                @click="handleToggle(user.id, user.is_active)"
-              >
+              <Button v-if="user.id !== authStore.profile?.id" size="sm" variant="ghost"
+                class="text-destructive hover:text-destructive cursor-pointer" :disabled="toggling"
+                @click="handleToggle(user.id, user.is_active)">
                 {{ user.is_active ? "Suspender" : "Reactivar" }}
               </Button>
               <Button v-else variant="ghost" size="sm" disabled>Tú</Button>

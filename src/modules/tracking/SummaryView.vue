@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { Weight, CalendarDays } from 'lucide-vue-next'
 import { useTracking } from './composables/useTracking'
 import { formatDateDisplay as formatDate } from '@/lib/utils'
-import StatCard from '@/modules/dashboard/components/StatCard.vue'
 import WeightTrendCard from '@/modules/dashboard/components/WeightTrendCard.vue'
-import CompositionRings from '@/modules/dashboard/components/CompositionRings.vue'
 
 const route = useRoute()
 const userId = route.params.id as string
