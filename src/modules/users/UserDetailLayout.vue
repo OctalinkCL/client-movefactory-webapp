@@ -86,9 +86,9 @@ async function saveProfile() {
                 </p>
               </div>
               <div v-else class="flex flex-col items-center space-y-1">
-                <Skeleton class="h-7 w-[190px]" />
-                <Skeleton class="h-5 w-[120px]" />
-                <Skeleton class="h-6 w-[100px] mt-1.5" />
+                <Skeleton class="h-7 w-47.5" />
+                <Skeleton class="h-5 w-30" />
+                <Skeleton class="h-6 w-25 mt-1.5" />
               </div>
             </div>
             <Sheet v-if="!loading" v-model:open="profileSheetOpen">

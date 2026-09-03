@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { computed, reactive, ref, onMounted } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import { useRoute } from 'vue-router'
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { CirclePlus, Pencil, Trash2, CalendarIcon } from 'lucide-vue-next'
 import { useTracking } from './composables/useTracking'
 import { useAuthStore } from '@/stores/auth'
 import { METRICS, getMetric } from './constants'
@@ -22,6 +23,20 @@ onMounted(() => fetchSessions(userId))
 
 function getMeasurement(session: typeof sessions.value[number] | undefined, metric: string) {
   return session?.measurements?.find(m => m.metric === metric)?.value ?? null
+}
+
+// Columnas activas del grid según breakpoint (sincronizado con las clases
+// grid-cols-2 / md:grid-cols-3 / lg:grid-cols-4 y los breakpoints de Tailwind).
+const isMd = useMediaQuery('(min-width: 48rem)')
+const isLg = useMediaQuery('(min-width: 64rem)')
+const gridCols = computed(() => (isLg.value ? 4 : isMd.value ? 3 : 2))
+
+// Celdas vacías para completar solo la última fila real y que el grid cierre
+// como rectángulo, sin generar filas enteras vacías.
+function fillerCount(session: typeof sessions.value[number]) {
+  const n = session.measurements?.length ?? 0
+  const cols = gridCols.value
+  return (cols - (n % cols)) % cols
 }
 
 // Sheet form
@@ -76,19 +91,20 @@ async function submitForm() {
 <template>
   <div class="space-y-4">
     <header class="flex items-center justify-between">
-      <h1 class="text-2xl font-semibold">Seguimiento</h1>
-
+      <h3 class="text-base font-medium">Historial de Seguimiento</h3>
       <Sheet v-model:open="sheetOpen" @update:open="(open) => !open && resetForm()">
         <SheetTrigger as-child>
-          <Button @click="editingSessionId = null">
-            <Plus class="size-4" />
+          <Button class="cursor-pointer" @click="editingSessionId = null">
+            <CirclePlus class="size-4" />
             Nueva sesión
           </Button>
         </SheetTrigger>
         <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
           <SheetHeader>
-            <SheetTitle>{{ editingSessionId ? 'Editar sesión de seguimiento' : 'Nueva sesión de seguimiento' }}</SheetTitle>
-            <SheetDescription class="sr-only">Formulario para {{ editingSessionId ? 'editar una' : 'registrar una nueva' }} sesión de seguimiento de métricas</SheetDescription>
+            <SheetTitle>{{ editingSessionId ? 'Editar sesión de seguimiento' : 'Nueva sesión de seguimiento' }}
+            </SheetTitle>
+            <SheetDescription class="sr-only">Formulario para {{ editingSessionId ? 'editar una' : 'registrar una nueva'
+              }} sesión de seguimiento de métricas</SheetDescription>
           </SheetHeader>
 
           <div class="px-4 space-y-5 py-2 overflow-y-auto flex-1">
@@ -103,20 +119,11 @@ async function submitForm() {
               <label class="text-sm font-medium">Mediciones</label>
               <p class="text-xs text-muted-foreground">Completa solo las métricas de esta sesión.</p>
               <div class="space-y-2">
-                <div
-                  v-for="metric in METRICS"
-                  :key="metric.key"
-                  class="flex items-center gap-3"
-                >
+                <div v-for="metric in METRICS" :key="metric.key" class="flex items-center gap-3">
                   <label class="text-sm w-40 shrink-0">{{ metric.label }}</label>
                   <div class="flex items-center gap-1.5 flex-1">
-                    <Input
-                      v-model="form.measurements[metric.key]"
-                      type="number"
-                      step="0.1"
-                      :placeholder="`0.0`"
-                      class="flex-1"
-                    />
+                    <Input v-model="form.measurements[metric.key]" type="number" step="0.1" :placeholder="`0.0`"
+                      class="flex-1" />
                     <span class="text-xs text-muted-foreground w-6">{{ metric.unit }}</span>
                   </div>
                 </div>
@@ -130,22 +137,14 @@ async function submitForm() {
               <label class="text-sm font-medium">
                 Notas <span class="text-muted-foreground text-xs font-normal">(opcional)</span>
               </label>
-              <textarea
-                v-model="form.notes"
-                rows="3"
-                placeholder="Observaciones de la sesión..."
-                class="w-full border rounded-md px-3 py-2 text-sm bg-background resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-              />
+              <textarea v-model="form.notes" rows="3" placeholder="Observaciones de la sesión..."
+                class="w-full border rounded-md px-3 py-2 text-sm bg-background resize-none focus:outline-none focus:ring-1 focus:ring-ring" />
             </div>
           </div>
 
           <SheetFooter class="grid grid-cols-2 gap-4">
             <Button size="lg" variant="outline" @click="resetForm">Cancelar</Button>
-            <Button
-              size="lg"
-              @click="submitForm"
-              :disabled="!METRICS.some(m => form.measurements[m.key] !== '')"
-            >
+            <Button size="lg" @click="submitForm" :disabled="!METRICS.some(m => form.measurements[m.key] !== '')">
               {{ editingSessionId ? 'Guardar cambios' : 'Guardar sesión' }}
             </Button>
           </SheetFooter>
@@ -155,42 +154,35 @@ async function submitForm() {
 
     <!-- Historial -->
     <div class="space-y-3">
-      <p class="text-sm font-medium">Historial de sesiones</p>
-
       <p v-if="loading" class="text-sm text-muted-foreground">Cargando...</p>
 
       <div v-else-if="sessions.length" class="space-y-2">
-        <div
-          v-for="session in sessions"
-          :key="session.id"
-          class="border rounded-md p-3 space-y-2"
-        >
-          <div class="flex items-center justify-between">
-            <p class="text-sm font-medium">{{ formatDate(session.date) }}</p>
+        <!-- item -->
+        <div v-for="session in sessions" :key="session.id" class="border rounded-lg overflow-hidden">
+          <!-- header -->
+          <div class="flex items-center justify-between border-b px-3 py-2">
+            <h5 class="text-sm flex items-center gap-2 font-medium">
+              <CalendarIcon :size="15" />{{ formatDate(session.date) }}
+            </h5>
             <div class="flex items-center gap-1">
               <Button variant="ghost" size="icon" class="size-7" @click="openEditSession(session)">
                 <Pencil class="size-3.5" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-7 text-destructive hover:text-destructive"
-                @click="onDeleteSession(session)"
-              >
+              <Button variant="ghost" size="icon" class="size-7 text-destructive hover:text-destructive"
+                @click="onDeleteSession(session)">
                 <Trash2 class="size-3.5" />
               </Button>
             </div>
           </div>
 
-          <div class="flex flex-wrap gap-1.5">
-            <span
-              v-for="m in session.measurements"
-              :key="m.metric"
-              class="text-xs border rounded-full px-2 py-1 bg-muted/40"
-            >
-              <span class="text-muted-foreground">{{ getMetric(m.metric)?.label }}:</span>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 -m-px border-r border-b border-border">
+            <div v-for="m in session.measurements" :key="m.metric"
+              class="text-xs flex justify-between p-2 border-l border-t border-border">
+              <span class="text-muted-foreground capitalize">{{ getMetric(m.metric)?.label }}:</span>
               <span class="font-medium">{{ m.value }} {{ getMetric(m.metric)?.unit }}</span>
-            </span>
+            </div>
+            <div v-for="n in fillerCount(session)" :key="`filler-${n}`" aria-hidden="true"
+              class="border-l border-t border-border" />
           </div>
 
           <p v-if="session.notes" class="text-xs text-muted-foreground italic">{{ session.notes }}</p>
