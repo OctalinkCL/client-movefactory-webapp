@@ -158,7 +158,8 @@ async function submitForm() {
 
       <div v-else-if="sessions.length" class="space-y-2">
         <!-- item -->
-        <div v-for="session in sessions" :key="session.id" class="border rounded-lg overflow-hidden">
+        <div v-for="session in sessions" :key="session.id"
+          class="border rounded-lg overflow-hidden hover:shadow hover:border-amber-300 transition-all">
           <!-- header -->
           <div class="flex items-center justify-between border-b px-3 py-2">
             <h5 class="text-sm flex items-center gap-2 font-medium">
