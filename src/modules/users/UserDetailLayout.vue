@@ -1,41 +1,47 @@
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useUser } from './composables/useUser'
-import { formatDateDisplay, sexLabel, calcAge } from '@/lib/utils'
-import { Input } from '@/components/ui/input'
-import { NativeSelect } from '@/components/ui/native-select'
+import { reactive, ref, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useUser } from "./composables/useUser";
+import { formatDateDisplay, sexLabel, calcAge } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
-} from '@/components/ui/sheet'
-import { ArrowLeft } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarImage } from '@/components/ui/avatar'
-import { Skeleton } from '@/components/ui/skeleton'
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { ArrowLeft } from "lucide-vue-next";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const route = useRoute()
-const router = useRouter()
-const userId = route.params.id as string
-const { user, loading, updateProfile } = useUser(userId)
+const route = useRoute();
+const router = useRouter();
+const userId = route.params.id as string;
+const { user, loading, updateProfile } = useUser(userId);
 
-const activeTab = computed(() => route.name as string)
+const activeTab = computed(() => route.name as string);
 
-const hasFixedData = () => !!(user.value?.birth_date || user.value?.sex || user.value?.height)
+const hasFixedData = () =>
+  !!(user.value?.birth_date || user.value?.sex || user.value?.height);
 
-const profileSheetOpen = ref(false)
+const profileSheetOpen = ref(false);
 const profileForm = reactive({
-  birth_date: '',
-  sex: '' as 'male' | 'female' | '',
-  height: '',
-  phone: '',
-})
+  birth_date: "",
+  sex: "" as "male" | "female" | "",
+  height: "",
+  phone: "",
+});
 
 function openProfileSheet() {
-  profileForm.birth_date = user.value?.birth_date ?? ''
-  profileForm.sex = user.value?.sex ?? ''
-  profileForm.height = user.value?.height?.toString() ?? ''
-  profileForm.phone = user.value?.phone ?? ''
-  profileSheetOpen.value = true
+  profileForm.birth_date = user.value?.birth_date ?? "";
+  profileForm.sex = user.value?.sex ?? "";
+  profileForm.height = user.value?.height?.toString() ?? "";
+  profileForm.phone = user.value?.phone ?? "";
+  profileSheetOpen.value = true;
 }
 
 async function saveProfile() {
@@ -44,26 +50,24 @@ async function saveProfile() {
     sex: profileForm.sex || null,
     height: profileForm.height ? parseFloat(profileForm.height) : null,
     phone: profileForm.phone || null,
-  })
-  profileSheetOpen.value = false
+  });
+  profileSheetOpen.value = false;
 }
 </script>
 
 <template>
   <div class="space-y-4">
     <header>
-      <button
-        class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer"
-        @click="router.push({ name: 'admin-users' })"
-      >
+      <button class="text-sm flex gap-2 items-center text-muted-foreground cursor-pointer"
+        @click="router.push({ name: 'admin-users' })">
         <ArrowLeft :size="15" />
-        Volver al Directorio de usuarios
+        Volver a lista de usuarios
       </button>
     </header>
 
     <div class="flex flex-col gap-4 | lg:flex-row lg:gap-6">
       <!-- aside: siempre visible -->
-      <aside class="w-full lg:w-[300px] lg:shrink-0">
+      <aside class="w-full lg:w-75 lg:shrink-0">
         <div class="border rounded-xl">
           <!-- basic -->
           <section class="px-4 py-6 text-center space-y-3">
@@ -82,15 +86,15 @@ async function saveProfile() {
                 </p>
               </div>
               <div v-else class="flex flex-col items-center space-y-1">
-                <Skeleton class="h-7 w-[190px]" />
-                <Skeleton class="h-5 w-[120px]" />
-                <Skeleton class="h-6 w-[100px] mt-1.5" />
+                <Skeleton class="h-7 w-47.5" />
+                <Skeleton class="h-5 w-30" />
+                <Skeleton class="h-6 w-25 mt-1.5" />
               </div>
             </div>
             <Sheet v-if="!loading" v-model:open="profileSheetOpen">
               <SheetTrigger as-child>
                 <Button size="xs" variant="outline" @click="openProfileSheet">
-                  {{ hasFixedData() ? 'Editar datos' : 'Completar datos' }}
+                  {{ hasFixedData() ? "Editar datos" : "Completar datos" }}
                 </Button>
               </SheetTrigger>
               <SheetContent @open-auto-focus.prevent class="min-w-full md:min-w-sm">
@@ -129,44 +133,56 @@ async function saveProfile() {
 
           <!-- info -->
           <section class="border-t p-4">
-            <h5 class="text-sm font-medium text-muted-foreground">Datos del Paciente</h5>
+            <h5 class="text-sm font-medium text-muted-foreground">
+              Datos del Paciente
+            </h5>
             <ul class="text-sm mt-4 grid grid-cols-2 gap-4">
               <li>
                 <h4 class="text-muted-foreground">Edad</h4>
                 <Skeleton class="h-4 w-25" v-if="loading" />
                 <p v-else class="font-medium">
-                  {{ user?.birth_date ? `${calcAge(user.birth_date)} años` : 'Sin especificar' }}
+                  {{
+                    user?.birth_date
+                      ? `${calcAge(user.birth_date)} años`
+                      : "Sin especificar"
+                  }}
                 </p>
               </li>
               <li>
                 <h4 class="text-muted-foreground">Sexo</h4>
                 <Skeleton class="h-4 w-25" v-if="loading" />
-                <p v-else class="font-medium">{{ user?.sex ? sexLabel(user?.sex) : 'Sin especificar' }}</p>
+                <p v-else class="font-medium">
+                  {{ user?.sex ? sexLabel(user?.sex) : "Sin especificar" }}
+                </p>
               </li>
               <li>
                 <h4 class="text-muted-foreground">Estatura</h4>
                 <Skeleton class="h-4 w-25" v-if="loading" />
-                <p v-else class="font-medium">{{ user?.height ? `${user?.height} cm` : 'Sin especificar' }}</p>
+                <p v-else class="font-medium">
+                  {{ user?.height ? `${user?.height} cm` : "Sin especificar" }}
+                </p>
               </li>
             </ul>
           </section>
 
           <!-- contact -->
           <section class="border-t p-4">
-            <h5 class="text-sm font-medium text-muted-foreground">Información de Contacto</h5>
+            <h5 class="text-sm font-medium text-muted-foreground">
+              Información de Contacto
+            </h5>
             <ul class="text-sm mt-4 grid gap-4">
               <li>
                 <h4 class="text-muted-foreground">Teléfono / Whatsapp</h4>
                 <Skeleton class="h-4 w-40" v-if="loading" />
                 <a v-else :href="`https://wa.me/${user?.phone}`" target="_blank" class="font-medium">
-                  {{ user?.phone ? `+56 ${user?.phone}` : 'Sin especificar' }}
+                  {{ user?.phone ? `+56 ${user?.phone}` : "Sin especificar" }}
                 </a>
               </li>
               <li>
                 <h4 class="text-muted-foreground">Correo Electrónico</h4>
                 <Skeleton class="h-4 w-40" v-if="loading" />
                 <a v-else :href="`mailto:${user?.email}`" target="_blank" class="font-medium">
-                  {{ user?.email || 'Sin especificar' }}
+                  {{ user?.email || "Sin especificar" }}
                 </a>
               </li>
             </ul>
@@ -176,27 +192,35 @@ async function saveProfile() {
 
       <!-- contenido dinámico -->
       <div class="flex-1 min-w-0 space-y-4">
-        <!-- nav -->
-        <div class="flex gap-2">
-          <button
-            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-            :class="activeTab === 'admin-tracking'
-              ? 'bg-foreground text-background'
-              : 'text-muted-foreground hover:text-foreground'"
-            @click="router.push({ name: 'admin-tracking', params: { id: userId } })"
-          >
-            Seguimiento
-          </button>
-          <button
-            class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-            :class="activeTab === 'admin-meal-plan'
-              ? 'bg-foreground text-background'
-              : 'text-muted-foreground hover:text-foreground'"
-            @click="router.push({ name: 'admin-meal-plan', params: { id: userId } })"
-          >
-            Plan de alimentación
-          </button>
-        </div>
+        <!-- navigation -->
+        <section class="bg-zinc-100 rounded-lg p-1">
+          <div class="flex gap-2">
+            <button class="px-4 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer" :class="activeTab === 'admin-summary'
+              ? 'bg-white text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              " @click="
+                router.push({ name: 'admin-summary', params: { id: userId } })
+                ">
+              Resumen
+            </button>
+            <button class="px-4 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer" :class="activeTab === 'admin-tracking'
+              ? 'bg-white text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              " @click="
+                router.push({ name: 'admin-tracking', params: { id: userId } })
+                ">
+              Seguimiento
+            </button>
+            <button class="px-4 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer" :class="activeTab === 'admin-meal-plan'
+              ? 'bg-white text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              " @click="
+                router.push({ name: 'admin-meal-plan', params: { id: userId } })
+                ">
+              Plan de alimentación
+            </button>
+          </div>
+        </section>
 
         <RouterView />
       </div>

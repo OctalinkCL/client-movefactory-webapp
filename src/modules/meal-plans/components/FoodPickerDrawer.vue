@@ -69,6 +69,7 @@ watch(open, async (val) => {
       .from('foods')
       .select('*')
       .eq('category_id', cat.id)
+      .eq('is_active', true)
       .order('name')
     foods.value = data ?? []
   }

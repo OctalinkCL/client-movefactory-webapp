@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { Pencil, ExternalLink } from 'lucide-vue-next'
+import { Pencil, ExternalLink, Trash2 } from 'lucide-vue-next'
 import UploadDocumentSheet from './components/UploadDocumentSheet.vue'
 import EditDocumentSheet from './components/EditDocumentSheet.vue'
 import { useDocuments } from './composables/useDocuments'
 import { formatDate } from '@/lib/utils'
 import type { Document } from './composables/useDocuments'
 
-const { documents, loading, fetchDocuments, openDocument } = useDocuments()
+const { documents, loading, fetchDocuments, openDocument, deleteDocument } = useDocuments()
 
 const editOpen = ref(false)
 const selectedDocument = ref<Document | null>(null)
@@ -21,6 +21,11 @@ const selectedDocument = ref<Document | null>(null)
 function openEdit(doc: Document) {
   selectedDocument.value = doc
   editOpen.value = true
+}
+
+async function onDelete(doc: Document) {
+  if (!confirm(`¿Eliminar el documento "${doc.name}"? Esta acción no se puede deshacer.`)) return
+  await deleteDocument(doc)
 }
 </script>
 
@@ -77,6 +82,15 @@ function openEdit(doc: Document) {
                 <Button size="sm" variant="ghost" @click="openEdit(doc)">
                   <Pencil class="size-4" />
                   Editar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  class="text-destructive hover:text-destructive"
+                  @click="onDelete(doc)"
+                >
+                  <Trash2 class="size-4" />
+                  Eliminar
                 </Button>
               </div>
             </TableCell>

@@ -7,9 +7,9 @@
 @import "shadcn-vue/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
-/* "Geist Variable", sans-serif */
+/*  */
 @theme inline {
-  --font-sans: "Barlow Semi Condensed", sans-serif;
+  --font-sans: "Geist Variable", sans-serif;
   --font-title: "Barlow Semi Condensed", sans-serif;
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
