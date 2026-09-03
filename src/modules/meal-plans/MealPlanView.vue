@@ -15,7 +15,17 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 // icon
-import { XIcon, PlusIcon, Pencil, Trash2 } from 'lucide-vue-next'
+import { XIcon, PlusIcon, Pencil, Trash2, CirclePlus, Utensils } from 'lucide-vue-next'
+
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 const route = useRoute()
 const userId = route.params.id as string
@@ -39,14 +49,14 @@ const PORTION_OPTIONS = [
   { value: 'libre', label: 'Libre elección' },
 ]
 
-function portionLabel(value: string | null) {
-  if (!value || value === 'libre') return 'Libre elección'
-  return PORTION_OPTIONS.find(p => p.value === value)?.label ?? value
-}
+// function portionLabel(value: string | null) {
+//   if (!value || value === 'libre') return 'Libre elección'
+//   return PORTION_OPTIONS.find(p => p.value === value)?.label ?? value
+// }
 
-function totalPortions(items?: { portion: string | null }[]) {
-  return items?.reduce((sum, i) => sum + (i.portion ? parseInt(i.portion, 10) || 0 : 0), 0) ?? 0
-}
+// function totalPortions(items?: { portion: string | null }[]) {
+//   return items?.reduce((sum, i) => sum + (i.portion ? parseInt(i.portion, 10) || 0 : 0), 0) ?? 0
+// }
 
 function totalFormPortions(items: { foodType: string; portion: string }[]) {
   return items.reduce((sum, i) => sum + (i.foodType && i.portion && i.portion !== 'libre' ? parseInt(i.portion, 10) || 0 : 0), 0)
@@ -135,13 +145,14 @@ async function submitForm() {
 
 <template>
   <div id="meal-plan-view" class="space-y-4">
+    <!-- header -->
     <header class="flex items-center justify-between">
-      <h1 class="text-2xl font-semibold">Plan de alimentación</h1>
+      <h1 class="text-base font-medium">Plan de alimentación</h1>
 
       <Sheet v-model:open="dialogOpen">
         <SheetTrigger as-child>
           <Button>
-            <PlusIcon class="size-4" />
+            <CirclePlus class="size-4" />
             Nuevo momento
           </Button>
         </SheetTrigger>
@@ -248,19 +259,14 @@ async function submitForm() {
 
     <div v-if="plan" class="space-y-4">
       <!-- Weekly coverage header -->
-      <div class="space-y-2">
+      <div class="space-y-2 hidden">
         <p class="text-xs uppercase tracking-wide text-muted-foreground">Cobertura semanal</p>
         <div class="grid grid-cols-7 gap-2 sm:gap-3">
-          <div
-            v-for="(name, di) in DAY_NAMES"
-            :key="di"
-            class="border rounded-xl p-3 flex flex-col items-center gap-1.5 bg-card"
-          >
+          <div v-for="(name, di) in DAY_NAMES" :key="di"
+            class="border rounded-xl p-3 flex flex-col items-center gap-1.5 bg-card">
             <p class="text-xs font-medium text-muted-foreground">{{ name }}</p>
-            <p
-              class="text-2xl font-semibold leading-none"
-              :class="momentsCountForDay(di + 1) > 0 ? 'text-foreground' : 'text-muted-foreground/40'"
-            >
+            <p class="text-2xl font-semibold leading-none"
+              :class="momentsCountForDay(di + 1) > 0 ? 'text-foreground' : 'text-muted-foreground/40'">
               {{ momentsCountForDay(di + 1) }}
             </p>
           </div>
@@ -268,48 +274,61 @@ async function submitForm() {
       </div>
 
       <!-- Moment cards -->
-      <div class="space-y-3">
-        <div v-for="m in plan.meal_plan_moments" :key="m.id" class="border rounded-md p-4 space-y-3">
-          <div class="flex items-start justify-between gap-2">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs border rounded-full px-2 py-0.5 font-medium">{{ m.moment?.name }}</span>
-              </div>
-              <p v-if="m.name" class="font-semibold text-sm">{{ m.name }}</p>
-              <p class="text-xs text-muted-foreground">
-                {{ m.meal_plan_items?.length ?? 0 }} tipos ·
-                {{ totalPortions(m.meal_plan_items) }} porciones
-              </p>
+      <div class="grid gap-3 grid-cols-1 lg:grid-cols-2">
+        <div v-for="m in plan.meal_plan_moments" :key="m.id"
+          class="border rounded-lg  hover:shadow-md hover:border-amber-300  transition-all">
+          <!-- header -->
+          <header class="border-b px-3 py-2 flex items-center justify-between">
+            <h5 class="text-sm flex items-center gap-2">
+              <span v-if="m.name">{{ m.name }}</span>
+              <span class="text-xs border rounded px-2 py-0.5 flex items-center gap-1">
+                <Utensils :size="10" /> {{ m.moment?.name }}
+              </span>
+            </h5>
+
+            <div class="flex gap-2">
+              <Button size="icon-sm" variant="secondary" @click="openEdit(m)">
+                <Pencil class="size-4" />
+              </Button>
+              <Button size="icon-sm" variant="destructive" @click="deletingMoment = m">
+                <Trash2 />
+              </Button>
             </div>
-            <!-- Day indicators -->
-            <div class="flex gap-1 shrink-0">
-              <span v-for="(label, di) in DAY_LABELS" :key="di"
-                class="w-6 h-6 rounded text-xs flex items-center justify-center font-medium" :class="m.days.includes(di + 1)
-                  ? 'bg-foreground text-background'
-                  : 'bg-muted text-muted-foreground'">{{ label }}</span>
-            </div>
+          </header>
+
+          <div class="p-3 grid gap-3">
+            <section>
+              <ul class="grid grid-cols-7 gap-1">
+                <li v-for="(label, di) in DAY_NAMES" :key="di" class="text-center py- rounded py-1"
+                  :class="m.days.includes(di + 1) ? 'bg-zinc-800 text-white font-semibold' : 'bg-zinc-100 text-zinc-500 font-medium opacity-60'">
+                  <p class="uppercase text-xs ">{{ label }}</p>
+                </li>
+              </ul>
+            </section>
+
+            <section class="border rounded" v-if="m.meal_plan_items?.length">
+              <Table>
+                <TableCaption v-if="m.note" class="border-t mt-0 text-left p-2 text-xs italic">
+                  <span class="font-medium">Comentarios:</span> {{ m.note }}
+                </TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead class="h-9 bg-zinc-100">Tipo</TableHead>
+                    <TableHead class="text-right h-9 bg-zinc-100">Porciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow v-for="item in m.meal_plan_items" :key="item.id">
+                    <TableCell class="font-medium h-6">{{ item.food_type }}</TableCell>
+                    <TableCell class="text-right h-6">{{ item.portion }}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </section>
+
           </div>
 
-          <!-- Item chips -->
-          <div v-if="m.meal_plan_items?.length" class="flex flex-wrap gap-2">
-            <span v-for="item in m.meal_plan_items" :key="item.id" class="border rounded-full px-2 py-0.5 text-xs">
-              {{ item.food_type }}
-              <span class="text-muted-foreground">×{{ portionLabel(item.portion) }}</span>
-            </span>
-          </div>
 
-          <p v-if="m.note" class="text-xs text-muted-foreground italic">{{ m.note }}</p>
-
-          <div class="flex items-center gap-2">
-            <Button size="sm" variant="secondary" class="cursor-pointer" @click="openEdit(m)">
-              <Pencil class="size-4" />
-              Editar
-            </Button>
-            <Button size="sm" variant="destructive" class="cursor-pointer" @click="deletingMoment = m">
-              <Trash2 class="size-4" />
-              Eliminar
-            </Button>
-          </div>
         </div>
       </div>
 
@@ -320,7 +339,7 @@ async function submitForm() {
             <DialogTitle>¿Eliminar este momento?</DialogTitle>
             <DialogDescription>
               <span class="font-medium text-foreground">{{ deletingMoment?.name ?? deletingMoment?.moment?.name
-                }}</span>
+              }}</span>
               · {{ deletingMoment?.days.length }} día(s) afectado(s)
             </DialogDescription>
           </DialogHeader>

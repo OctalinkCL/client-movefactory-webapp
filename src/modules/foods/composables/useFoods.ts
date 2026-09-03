@@ -25,7 +25,9 @@ export function useFoods() {
     categories.value = data ?? []
   }
 
-  async function createFood(fields: Omit<Food, 'id' | 'created_at' | 'category'>) {
+  type FoodInput = Omit<Food, 'id' | 'created_at' | 'category' | 'is_active'>
+
+  async function createFood(fields: FoodInput) {
     const { data, error: err } = await supabase
       .from('foods')
       .insert(fields)
@@ -37,7 +39,7 @@ export function useFoods() {
     return true
   }
 
-  async function updateFood(id: string, fields: Omit<Food, 'id' | 'created_at' | 'category'>) {
+  async function updateFood(id: string, fields: FoodInput) {
     const { data, error: err } = await supabase
       .from('foods')
       .update(fields)
@@ -50,5 +52,20 @@ export function useFoods() {
     return true
   }
 
-  return { foods, categories, loading, error, fetchFoods, fetchCategories, createFood, updateFood }
+  // Soft-delete: desactivar un alimento lo saca del listado que se ofrece
+  // al elegir, pero conserva las selecciones históricas de los alumnos.
+  async function setActive(id: string, isActive: boolean) {
+    const { data, error: err } = await supabase
+      .from('foods')
+      .update({ is_active: isActive })
+      .eq('id', id)
+      .select('*, category:food_categories(id, name)')
+      .single()
+    if (err) { error.value = err.message; return false }
+    const idx = foods.value.findIndex(f => f.id === id)
+    if (idx !== -1) foods.value[idx] = data
+    return true
+  }
+
+  return { foods, categories, loading, error, fetchFoods, fetchCategories, createFood, updateFood, setActive }
 }

@@ -1,34 +1,36 @@
 <script setup lang="ts">
-import CreateUser from './components/CreateUser.vue'
-import { useStaff } from './composables/useStaff'
-import { useToggleUser } from './composables/useToggleUser'
-import { useAuthStore } from '@/stores/auth'
-import EmptyItem from '@/components/shared/EmptyItem.vue'
-import { getInitials } from '@/lib/utils'
+import CreateUser from "./components/CreateUser.vue";
+import { useStaff } from "./composables/useStaff";
+import { useToggleUser } from "./composables/useToggleUser";
+import { useAuthStore } from "@/stores/auth";
+import EmptyItem from "@/components/shared/EmptyItem.vue";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table'
-import {
-  Avatar, AvatarFallback, AvatarImage,
-} from '@/components/ui/avatar'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import AvatarUser from "@/components/shared/AvatarUser.vue";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
-const authStore = useAuthStore()
-const { users, loading, fetchUsers } = useStaff()
-const { toggleUser, loading: toggling } = useToggleUser()
+const authStore = useAuthStore();
+const { users, loading, fetchUsers } = useStaff();
+const { toggleUser, loading: toggling } = useToggleUser();
 
 function roleLabel(role: string) {
-  if (role === 'admin') return 'Admin'
-  if (role === 'nutritionist') return 'Nutricionista'
-  return role
+  if (role === "admin") return "Admin";
+  if (role === "nutritionist") return "Nutricionista";
+  return role;
 }
 
 async function handleToggle(userId: string, currentActive: boolean) {
-  const action = currentActive ? 'suspender' : 'reactivar'
-  if (!confirm(`¿Seguro que deseas ${action} este miembro del staff?`)) return
-  await toggleUser(userId, !currentActive)
-  await fetchUsers()
+  const action = currentActive ? "suspender" : "reactivar";
+  if (!confirm(`¿Seguro que deseas ${action} este miembro del staff?`)) return;
+  await toggleUser(userId, !currentActive);
+  await fetchUsers();
 }
 </script>
 
@@ -37,7 +39,6 @@ async function handleToggle(userId: string, currentActive: boolean) {
     <header class="flex items-start justify-between lg:items-center">
       <div class="leading-tight">
         <h1 class="text-xl font-medium">Staff</h1>
-        <p class="text-sm text-muted-foreground">Administra los nutricionistas y administradores del sistema.</p>
       </div>
       <CreateUser role="nutritionist" @created="fetchUsers" />
     </header>
@@ -58,48 +59,42 @@ async function handleToggle(userId: string, currentActive: boolean) {
             <TableHead>Email</TableHead>
             <TableHead>Teléfono</TableHead>
             <TableHead>Rol</TableHead>
+            <TableHead>Estado</TableHead>
             <TableHead class="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-for="user in users" :key="user.id">
             <TableCell class="font-medium flex items-center gap-2">
-              <Avatar>
-                <AvatarImage :src="user.avatar_url" :alt="user.full_name" v-if="user.avatar_url" />
-                <AvatarFallback class="text-xs">{{ getInitials(user.full_name) }}</AvatarFallback>
-              </Avatar>
+              <AvatarUser :src="user.avatar_url" :name="user.full_name" />
               {{ user.full_name }}
-              <span
-                v-if="!user.is_active"
-                class="text-xs px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border"
-              >
+              <span v-if="!user.is_active"
+                class="text-xs px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
                 Suspendido
               </span>
             </TableCell>
             <TableCell>{{ user.email }}</TableCell>
-            <TableCell>{{ user.phone ?? '—' }}</TableCell>
+            <TableCell>{{ user.phone ?? "—" }}</TableCell>
+            <TableCell class="text-muted-foreground">
+              {{ roleLabel(user.role) }}
+            </TableCell>
             <TableCell>
-              <span
-                class="text-xs px-2 py-0.5 rounded-full border"
-                :class="user.role === 'admin'
-                  ? 'bg-primary/10 text-primary border-primary/20'
-                  : 'bg-muted text-muted-foreground border-border'"
-              >
-                {{ roleLabel(user.role) }}
+              <span :class="{
+                'px-2 py-0.5 rounded-full text-xs font-medium': true,
+                'bg-green-500/10 text-green-500 ': user.is_active,
+                'bg-red-500/10 text-red-500': !user.is_active,
+              }">
+                {{ user.is_active ? "Activo" : "Suspendido" }}
               </span>
             </TableCell>
+            <!-- actions -->
             <TableCell class="text-right">
-              <Button
-                v-if="user.id !== authStore.profile?.id"
-                size="sm"
-                variant="ghost"
-                class="text-destructive hover:text-destructive"
-                :disabled="toggling"
-                @click="handleToggle(user.id, user.is_active)"
-              >
-                {{ user.is_active ? 'Suspender' : 'Reactivar' }}
+              <Button v-if="user.id !== authStore.profile?.id" size="sm" variant="ghost"
+                class="text-destructive hover:text-destructive cursor-pointer" :disabled="toggling"
+                @click="handleToggle(user.id, user.is_active)">
+                {{ user.is_active ? "Suspender" : "Reactivar" }}
               </Button>
-              <span v-else class="text-xs text-muted-foreground">Tú</span>
+              <Button v-else variant="ghost" size="sm" disabled>Tú</Button>
             </TableCell>
           </TableRow>
         </TableBody>
