@@ -8,6 +8,7 @@ import { useItemSplits } from './composables/useItemSplits'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft } from 'lucide-vue-next'
 import type { Food } from '@/types/food'
+import { canSplit } from './lib/portion'
 
 const { profile } = storeToRefs(useAuthStore())
 const { selections, fetchAll } = useUserFoodSelections()
@@ -32,8 +33,10 @@ const shoppingList = computed((): ShoppingCategory[] => {
   for (const sel of selections.value) {
     if (!sel.food) continue
     // Si el ítem está dividido, cada selección ya representa 1 sola
-    // porción; si no, la selección representa el total del ítem.
-    const portions = isSplit(sel.meal_plan_item_id) ? 1 : Number(sel.meal_plan_item?.portion ?? 1)
+    // porción; si no, la selección representa el total del ítem (puede
+    // ser media porción: 1.5, 2.5...).
+    const portion = sel.meal_plan_item?.portion ?? null
+    const portions = isSplit(sel.meal_plan_item_id) && canSplit(portion) ? 1 : Number(portion ?? 1)
     const existing = byFood.get(sel.food_id) ?? { food: sel.food, totalGrams: 0, totalUnits: 0 }
     if (sel.food.is_unit_based) {
       existing.totalUnits += portions * (sel.food.units_per_portion ?? 1)
@@ -67,10 +70,12 @@ const stats = computed(() => ({
   totalGrams: shoppingList.value.reduce((n, c) => n + c.totalGrams, 0),
 }))
 
+// Redondeo solo al mostrar: los totales se acumulan sin redondear para no
+// arrastrar error entre días (ej. 7 x 0.5 porción).
 function formatWeight(grams: number): string {
   return grams >= 1000
     ? (grams / 1000).toFixed(2) + ' kg'
-    : grams + ' g'
+    : Math.round(grams) + ' g'
 }
 
 function formatQuantity(item: ShoppingItem): string {

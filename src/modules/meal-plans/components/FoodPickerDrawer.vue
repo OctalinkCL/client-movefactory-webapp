@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { Search, ChevronRight, Check } from 'lucide-vue-next'
+import { formatAmount, portionLabel } from '../lib/portion'
 
 const props = defineProps<{
   foodType: string
@@ -34,21 +35,22 @@ const filtered = computed(() =>
 
 // Muestra el total ya multiplicado por la cantidad de porciones pedida en la
 // pauta (props.portion), igual que el cálculo de la lista de compras
-// (UserShoppingView.vue). "household_measure" es texto libre del alimento
-// (ej. "1 palma de la mano") y no se puede escalar de forma confiable, así
-// que solo se muestra cuando la cantidad es 1 porción.
+// (UserShoppingView.vue). Acá no se redondean unidades: con media porción se
+// muestra "½ unidad"; el redondeo hacia arriba es solo en la lista de compras.
+// "household_measure" es texto libre del alimento (ej. "1 palma de la mano"),
+// referencial para 1 porción: se muestra tal cual, sin escalar.
 function measureText(food: Food): string {
   const factor = Number(props.portion) || 1
   const gramsBase = food.portion_grams_cooked ?? food.portion_grams
-  const totalGrams = gramsBase * factor
+  const totalGrams = Math.round(gramsBase * factor * 10) / 10
   const grams = food.portion_grams_cooked ? `${totalGrams}g cocido` : `${totalGrams}g`
 
   if (food.is_unit_based && food.units_per_portion) {
     const totalUnits = food.units_per_portion * factor
-    return `${grams} · ${totalUnits} ${totalUnits === 1 ? 'unidad' : 'unidades'}`
+    return `${grams} · ${formatAmount(totalUnits)} ${totalUnits > 1 ? 'unidades' : 'unidad'}`
   }
 
-  if (factor === 1 && food.household_measure) {
+  if (food.household_measure) {
     return `${grams} · ${food.household_measure}`
   }
 
@@ -103,7 +105,7 @@ function select(food: Food) {
     <DrawerContent class="h-[82vh] flex flex-col">
       <DrawerHeader class="pb-3">
         <DrawerTitle>Elegir {{ (label ?? foodType).toLowerCase() }}</DrawerTitle>
-        <p class="text-sm text-muted-foreground">{{ portion }} · selecciona 1 alimento</p>
+        <p class="text-sm text-muted-foreground">{{ portionLabel(portion) }} · selecciona 1 alimento</p>
       </DrawerHeader>
 
       <div class="px-4 pb-3 shrink-0">

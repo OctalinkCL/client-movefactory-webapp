@@ -16,6 +16,7 @@ import RepeatMomentDrawer from './components/RepeatMomentDrawer.vue'
 import type { MealPlanMoment, MealPlanItem } from '@/types/meal-plan'
 import type { Food } from '@/types/food'
 import type { UserFoodSelection } from '@/types/food-selection'
+import { canSplit, portionLabel } from './lib/portion'
 
 const router = useRouter()
 const { profile } = storeToRefs(useAuthStore())
@@ -69,13 +70,13 @@ const momentsForDay = computed(() => {
     .sort((a, b) => (a.moment?.sort_order ?? 0) - (b.moment?.sort_order ?? 0))
 })
 
-// Slots que hay que completar para un ítem: 1 si está combinado (o tiene
-// una sola porción), o tantos como porciones si el alumno lo dividió.
+// Slots que hay que completar para un ítem: 1 si está combinado (o no se
+// puede dividir: 1 porción o medias porciones), o tantos como porciones si
+// el alumno lo dividió.
 function slotsForItem(item: MealPlanItem): number[] {
   if (item.portion === null) return []
-  const total = Number(item.portion) || 1
-  if (total <= 1 || !isSplit(item.id)) return [0]
-  return Array.from({ length: total }, (_, i) => i)
+  if (!canSplit(item.portion) || !isSplit(item.id)) return [0]
+  return Array.from({ length: Number(item.portion) }, (_, i) => i)
 }
 
 function dayIsComplete(dayN: number): boolean {
@@ -247,7 +248,7 @@ async function handleCopy(moment: MealPlanMoment, targetDays: number[]) {
               </div>
 
               <!-- Dividido: un selector por porción -->
-              <template v-else-if="isSplit(item.id) && Number(item.portion) > 1">
+              <template v-else-if="isSplit(item.id) && canSplit(item.portion)">
                 <div
                   v-for="slot in slotsForItem(item)"
                   :key="slot"
@@ -278,7 +279,7 @@ async function handleCopy(moment: MealPlanMoment, targetDays: number[]) {
                 <div class="flex items-center justify-between px-4 py-3 gap-4">
                   <div class="min-w-0">
                     <p class="text-sm font-medium">{{ item.food_type }}</p>
-                    <p class="text-xs text-muted-foreground">{{ item.portion }}</p>
+                    <p class="text-xs text-muted-foreground">{{ portionLabel(item.portion) }}</p>
                   </div>
                   <FoodPickerDrawer
                     :food-type="item.food_type"
@@ -288,7 +289,7 @@ async function handleCopy(moment: MealPlanMoment, targetDays: number[]) {
                   />
                 </div>
                 <button
-                  v-if="Number(item.portion) > 1"
+                  v-if="canSplit(item.portion)"
                   class="w-full text-left px-4 pb-3 text-xs text-primary hover:underline"
                   @click="handleSplit(item.id)"
                 >
