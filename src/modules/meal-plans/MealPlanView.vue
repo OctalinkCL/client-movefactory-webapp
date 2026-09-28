@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { NativeSelect } from '@/components/ui/native-select'
 import type { MealPlanMoment } from '@/types/meal-plan'
+import { PORTION_VALUES, formatAmount, portionLabel } from './lib/portion'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger,
 } from '@/components/ui/sheet'
@@ -40,12 +41,7 @@ const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
 const FOOD_TYPES = ['Proteína', 'Carbohidrato', 'Grasa', 'Verdura', 'Fruta', 'Lácteo']
 const PORTION_OPTIONS = [
-  { value: '1', label: '1 porción' },
-  { value: '2', label: '2 porciones' },
-  { value: '3', label: '3 porciones' },
-  { value: '4', label: '4 porciones' },
-  { value: '5', label: '5 porciones' },
-  { value: '6', label: '6 porciones' },
+  ...PORTION_VALUES.map(value => ({ value, label: portionLabel(value) })),
   { value: 'libre', label: 'Libre elección' },
 ]
 
@@ -59,7 +55,7 @@ const PORTION_OPTIONS = [
 // }
 
 function totalFormPortions(items: { foodType: string; portion: string }[]) {
-  return items.reduce((sum, i) => sum + (i.foodType && i.portion && i.portion !== 'libre' ? parseInt(i.portion, 10) || 0 : 0), 0)
+  return items.reduce((sum, i) => sum + (i.foodType && i.portion && i.portion !== 'libre' ? Number(i.portion) || 0 : 0), 0)
 }
 
 function momentsCountForDay(day: number) {
@@ -185,7 +181,7 @@ async function submitForm() {
                 <label class="text-sm font-medium">Composición</label>
                 <span class="text-xs text-muted-foreground">
                   {{form.items.filter(i => i.foodType).length}} tipos ·
-                  {{ totalFormPortions(form.items) }} porciones
+                  {{ formatAmount(totalFormPortions(form.items)) }} porciones
                 </span>
               </div>
 
@@ -320,7 +316,7 @@ async function submitForm() {
                 <TableBody>
                   <TableRow v-for="item in m.meal_plan_items" :key="item.id">
                     <TableCell class="font-medium h-6">{{ item.food_type }}</TableCell>
-                    <TableCell class="text-right h-6">{{ item.portion }}</TableCell>
+                    <TableCell class="text-right h-6">{{ item.portion ? formatAmount(Number(item.portion)) : 'Libre' }}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
